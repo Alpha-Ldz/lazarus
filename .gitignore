@@ -1,3 +1,14 @@
+# Data and ML artifacts
+ml/data/
+ml/datasets/
+ml/runs/
+apps/api/models/*.pt
+
+# Node
+node_modules/
+apps/web/dist/
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

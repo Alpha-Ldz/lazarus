@@ -1,0 +1,2 @@
+# Placez ici le modèle best.pt ou créez un symlink:
+# ln -s ../../../ml/runs/detect/deeppcb_yolo11/weights/best.pt best.pt

@@ -1,0 +1,33 @@
+[project]
+name = "lazarus"
+version = "0.1.0"
+description = "PCB defect detection with YOLOv11 and AI diagnosis"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "python-multipart>=0.0.18",
+    "pillow>=11.0.0",
+    "anthropic>=0.40.0",
+]
+
+[project.optional-dependencies]
+ml = [
+    "ipykernel>=7.2.0",
+    "torch>=2.11.0",
+    "opencv-python-headless>=4.8.0",
+    "ultralytics>=8.3.0",
+    "pyyaml>=6.0",
+]
+dev = [
+    "ruff>=0.8.0",
+    "pytest>=8.0.0",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
