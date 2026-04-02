@@ -1,7 +1,7 @@
 # Minimal LLM configuration for /api/diagnose endpoint
 # Provider can be switched without code changes via this file.
 provider: "ollama"
-model: "qwen3.5:32b"
+model: "qwen2.5:7b"
 base_url: "http://localhost:11434"
 api_key: "ollama"  # Ollama doesn't need a real API key
 temperature: 0.1

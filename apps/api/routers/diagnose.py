@@ -6,8 +6,8 @@ import json
 from pathlib import Path
 from typing import Literal
 
+import httpx
 from fastapi import APIRouter, HTTPException
-from litellm import completion
 from pydantic import BaseModel, Field, ValidationError
 
 from ..config import get_config
@@ -89,26 +89,26 @@ Detected defects:
 
 Provide a repair sheet for the most critical defect."""
 
-    # Appeler le LLM via LiteLLM
+    # Appeler le LLM via Ollama
     try:
-        completion_params = {
-            "model": f"{config['provider']}/{config['model']}",
-            "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt},
-            ],
-            "api_key": config["api_key"],
-            "temperature": config["temperature"],
-            "max_tokens": config["max_tokens"],
-        }
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            ollama_response = await client.post(
+                f"{config['base_url']}/v1/chat/completions",
+                json={
+                    "model": config["model"],
+                    "messages": [
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    "temperature": config["temperature"],
+                    "max_tokens": config["max_tokens"],
+                },
+            )
+            ollama_response.raise_for_status()
+            data = ollama_response.json()
 
-        # Ajouter base_url si présent (nécessaire pour Ollama local)
-        if "base_url" in config:
-            completion_params["base_url"] = config["base_url"]
-
-        response = completion(**completion_params)
-
-        llm_text = response.choices[0].message.content.strip()
+            # Récupérer le contenu de la réponse
+            llm_text = data["choices"][0]["message"]["content"].strip()
 
         # Parser le JSON
         try:
