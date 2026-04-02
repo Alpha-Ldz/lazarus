@@ -1,113 +1,134 @@
 """
-Router pour le diagnostic avec Claude AI.
+Router pour le diagnostic PCB avec LLM configurable.
 """
 
-import os
+import json
+from pathlib import Path
+from typing import Literal
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from litellm import completion
+from pydantic import BaseModel, Field, ValidationError
+
+from ..config import get_config
 
 router = APIRouter()
+
+# Charger le prompt système
+PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "diagnose.txt"
+SYSTEM_PROMPT = PROMPT_PATH.read_text(encoding="utf-8").strip()
+
+
+class Detection(BaseModel):
+    """Une détection YOLO."""
+
+    class_: str = Field(..., alias="class")
+    confidence: float
+    bbox: list[float]  # [x1, y1, x2, y2]
+
+
+class ImageSize(BaseModel):
+    """Dimensions de l'image."""
+
+    width: int
+    height: int
 
 
 class DiagnoseRequest(BaseModel):
     """Requête de diagnostic."""
 
-    defects: list[dict]  # Liste des défauts détectés par YOLO
-    context: str | None = None  # Contexte additionnel (type de PCB, etc.)
+    detections: list[Detection]
+    image_size: ImageSize
+
+
+class RepairSheet(BaseModel):
+    """Fiche de réparation structurée."""
+
+    component: str
+    defect_type: str
+    severity: Literal["low", "medium", "high"]
+    steps: list[str]
+    estimated_cost: str
+    difficulty: int = Field(..., ge=1, le=5)
 
 
 class DiagnoseResponse(BaseModel):
     """Réponse du diagnostic."""
 
-    success: bool
-    diagnosis: str
-    recommendations: list[str]
-    severity: str  # "low", "medium", "high", "critical"
+    repair_sheet: RepairSheet
 
 
 @router.post("/", response_model=DiagnoseResponse)
 async def diagnose_defects(request: DiagnoseRequest):
     """
-    Génère un diagnostic détaillé des défauts PCB avec Claude.
+    Génère une fiche de réparation pour les défauts PCB détectés.
 
-    - **defects**: Liste des défauts détectés (class_name, confidence, bbox)
-    - **context**: Informations supplémentaires sur le PCB
+    - **detections**: Liste des défauts YOLO (class, confidence, bbox)
+    - **image_size**: Dimensions de l'image analysée
     """
-    api_key = os.getenv("ANTHROPIC_API_KEY")
+    # Validation : liste vide
+    if not request.detections:
+        raise HTTPException(status_code=422, detail="Empty detections list")
 
-    if not api_key:
-        raise HTTPException(
-            status_code=503,
-            detail="ANTHROPIC_API_KEY non configurée. Définissez la variable d'environnement.",
-        )
+    # Charger la configuration LLM
+    try:
+        config = get_config()
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Configuration error: {e}")
 
-    if not request.defects:
-        return DiagnoseResponse(
-            success=True,
-            diagnosis="Aucun défaut détecté sur ce PCB.",
-            recommendations=["Continuer la production normalement."],
-            severity="low",
-        )
-
-    # Construire le prompt pour Claude
-    defects_summary = "\n".join(
-        f"- {d.get('class_name', 'unknown')}: confiance {d.get('confidence', 0):.1%}"
-        for d in request.defects
+    # Construire le prompt utilisateur
+    detections_text = "\n".join(
+        f"- Class: {d.class_}, Confidence: {d.confidence:.2%}, BBox: {d.bbox}"
+        for d in request.detections
     )
 
-    context_text = f"\nContexte additionnel: {request.context}" if request.context else ""
+    user_prompt = f"""Image dimensions: {request.image_size.width}x{request.image_size.height}
 
-    prompt = f"""Analysez les défauts suivants détectés sur un PCB (circuit imprimé) et fournissez un diagnostic technique.
+Detected defects:
+{detections_text}
 
-Défauts détectés:
-{defects_summary}
-{context_text}
+Provide a repair sheet for the most critical defect."""
 
-Fournissez:
-1. Un diagnostic détaillé expliquant l'impact potentiel de ces défauts
-2. Des recommandations d'action (réparation, rejet, inspection manuelle, etc.)
-3. Un niveau de sévérité global (low, medium, high, critical)
-
-Répondez de manière concise et technique, adaptée à un ingénieur en électronique."""
-
+    # Appeler le LLM via LiteLLM
     try:
-        import anthropic
-
-        client = anthropic.Anthropic(api_key=api_key)
-
-        message = client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=1024,
-            messages=[{"role": "user", "content": prompt}],
+        response = completion(
+            model=f"{config['provider']}/{config['model']}",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+            api_key=config["api_key"],
+            temperature=config["temperature"],
+            max_tokens=config["max_tokens"],
         )
 
-        response_text = message.content[0].text
+        llm_text = response.choices[0].message.content.strip()
 
-        # Parser la réponse (simpliste, pourrait être amélioré)
-        severity = "medium"
-        if any(d.get("class_name") in ["open", "short"] for d in request.defects):
-            severity = "high"
-        if len(request.defects) > 5:
-            severity = "critical"
+        # Parser le JSON
+        try:
+            repair_data = json.loads(llm_text)
+        except json.JSONDecodeError as e:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Malformed LLM JSON response: {e}",
+            )
 
-        recommendations = [
-            "Inspection manuelle recommandée",
-            "Vérifier les connexions électriques",
-            "Documenter les défauts pour analyse qualité",
-        ]
+        # Valider avec Pydantic
+        try:
+            repair_sheet = RepairSheet(**repair_data)
+        except ValidationError as e:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid repair sheet structure: {e}",
+            )
 
-        return DiagnoseResponse(
-            success=True,
-            diagnosis=response_text,
-            recommendations=recommendations,
-            severity=severity,
-        )
+        return DiagnoseResponse(repair_sheet=repair_sheet)
 
-    except ImportError:
-        raise HTTPException(
-            status_code=503,
-            detail="Package anthropic non installé. Ajoutez-le aux dépendances.",
-        )
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur Claude API: {str(e)}")
+        # Ne jamais logger l'api_key
+        error_msg = str(e)
+        if config.get("api_key") in error_msg:
+            error_msg = error_msg.replace(config["api_key"], "***")
+        raise HTTPException(status_code=500, detail=f"LLM error: {error_msg}")
