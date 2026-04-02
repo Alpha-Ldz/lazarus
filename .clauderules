@@ -1,0 +1,223 @@
+# Claude Rules - Lazarus Project
+
+## Architecture du projet
+
+Lazarus est un système de détection et diagnostic de défauts PCB organisé en **monorepo** avec trois composants principaux :
+
+### Structure des dossiers
+
+```
+lazarus/
+├── apps/
+│   ├── api/          # Backend FastAPI (Python 3.13+)
+│   │   ├── main.py           # Point d'entrée FastAPI, configuration CORS, lifespan
+│   │   ├── routers/
+│   │   │   ├── analyze.py    # POST /api/analyze - Détection YOLO
+│   │   │   └── diagnose.py   # POST /api/diagnose - Diagnostic Claude
+│   │   └── models/           # Symlink vers best.pt (YOLO weights)
+│   └── web/          # Frontend React 19 + TypeScript
+│       ├── src/              # Composants React
+│       ├── package.json      # Dépendances npm
+│       └── vite.config.ts    # Configuration Vite
+├── ml/               # Pipeline Machine Learning
+│   ├── train.py      # Script d'entraînement YOLOv11
+│   ├── test.py       # Script de test du modèle
+│   ├── data/         # Dataset DeepPCB brut
+│   ├── datasets/     # Datasets convertis au format YOLO
+│   ├── runs/         # Résultats d'entraînement (weights, metrics)
+│   └── notebooks/    # Notebooks Jupyter pour expérimentation
+├── .claude/          # Configuration Claude Code
+│   ├── settings.json         # Permissions et configurations
+│   └── commands/             # Skills personnalisés
+├── pyproject.toml    # Dépendances Python (uv)
+└── package.json      # Workspace npm (optionnel)
+```
+
+## Stack Technique
+
+### Backend (`apps/api/`)
+- **Framework** : FastAPI 0.115+ avec Uvicorn
+- **Python** : 3.13+ (géré par uv)
+- **ML** : YOLOv11 via Ultralytics
+- **IA** : Anthropic Claude API (diagnostic intelligent)
+- **Images** : Pillow (PIL)
+- **CORS** : Configuré pour localhost:3000 et localhost:5173
+
+### Frontend (`apps/web/`)
+- **Framework** : React 19 avec TypeScript
+- **Build** : Vite 6
+- **Styling** : TailwindCSS 4 avec @tailwindcss/vite
+- **Canvas** : Konva + react-konva (annotation d'images)
+- **Upload** : react-dropzone
+- **PDF** : jsPDF
+- **Icons** : lucide-react
+
+### ML Pipeline (`ml/`)
+- **Framework** : YOLOv11 (Ultralytics)
+- **Deep Learning** : PyTorch 2.11+
+- **Vision** : OpenCV (opencv-python-headless)
+- **Dataset** : DeepPCB (1500 images, 6 classes de défauts)
+
+## Dataset et Classes
+
+**DeepPCB** - Détection de défauts PCB
+- **Classes** (6 types de défauts) :
+  1. `open` - Circuit ouvert
+  2. `short` - Court-circuit
+  3. `mousebite` - Morsure de souris
+  4. `spur` - Éperon métallique
+  5. `copper` - Défaut de cuivre
+  6. `pin-hole` - Trou d'épingle
+
+- **Format original** : `x1 y1 x2 y2 class_id` (class_id 1-indexed)
+- **Format YOLO** : `class_id cx cy w h` (normalisé, class_id 0-indexed)
+
+## Conventions de code
+
+### Python (Backend + ML)
+- **Formatter** : Ruff
+- **Line length** : 120 caractères
+- **Target** : Python 3.13
+- **Linting** : Ruff avec règles E, F, I, UP
+- **Docstrings** : Format Google ("""Description.\n\nArgs:\n    ...\n""")
+- **Type hints** : Utiliser partout (FastAPI, fonctions ML)
+
+### TypeScript (Frontend)
+- **Formatter** : ESLint + Prettier
+- **Types** : Strict mode activé
+- **Naming** :
+  - Components : PascalCase (`PCBViewer.tsx`)
+  - Hooks : camelCase avec préfixe `use` (`useImageUpload.ts`)
+  - Utils : camelCase (`formatDefects.ts`)
+
+### Structure des fichiers
+- **API routes** : 1 fichier par endpoint dans `apps/api/routers/`
+- **React components** : 1 composant par fichier
+- **Exports** : Named exports préférés aux default exports
+
+## Workflow de développement
+
+### Commandes fréquentes
+
+**Backend**
+```bash
+uv sync                              # Installer dépendances
+uv run uvicorn apps.api.main:app --reload  # Dev server
+uv run python -m pytest              # Tests
+uv run ruff check .                  # Linting
+```
+
+**Frontend**
+```bash
+cd apps/web
+npm install                          # Installer dépendances
+npm run dev                          # Dev server (Vite)
+npm run build                        # Production build
+npm run lint                         # ESLint
+```
+
+**ML**
+```bash
+uv sync --extra ml                   # Installer dépendances ML
+uv run python ml/train.py            # Entraîner YOLO
+uv run python ml/test.py             # Tester le modèle
+```
+
+### Git workflow
+- **Branches** : `feature/`, `fix/`, `chore/`
+- **Commits** : Conventional Commits (`feat:`, `fix:`, `chore:`, etc.)
+- **PR** : Toujours créer une PR pour review
+
+## Principes de design
+
+1. **Simplicité** : Éviter la sur-ingénierie, solutions simples et directes
+2. **Type safety** : Utiliser TypeScript strict et Python type hints
+3. **Séparation des responsabilités** :
+   - API : Uniquement routing et validation
+   - ML : Logique de détection isolée
+   - Frontend : Uniquement UI et interactions
+4. **Performance** :
+   - Charger le modèle YOLO au startup (pas à chaque requête)
+   - Optimiser les images avant upload
+   - Lazy loading des composants React
+5. **Erreurs** : Toujours gérer les erreurs explicitement (try/catch, error boundaries)
+
+## Points d'attention
+
+### Modèle YOLO
+- Le modèle `best.pt` doit être un **symlink** depuis `ml/runs/detect/deeppcb_yolo11/weights/best.pt`
+- Vérifier que le modèle est chargé au startup via `/health`
+- Ne JAMAIS commiter les weights (déjà dans .gitignore)
+
+### API Keys
+- Claude API key dans `.env` : `ANTHROPIC_API_KEY=sk-...`
+- Ne JAMAIS commiter les clés (fichier .env dans .gitignore)
+
+### CORS
+- Configuré pour `localhost:3000` et `localhost:5173`
+- Ajuster si le frontend utilise un autre port
+
+### Conversion d'images
+- YOLO attend des fichiers, pas des bytes
+- Toujours convertir bytes → PIL Image avant inférence
+- Exemple : `Image.open(io.BytesIO(await file.read()))`
+
+## Endpoints API détaillés
+
+### POST /api/analyze
+**Input** : `multipart/form-data` avec clé `file`
+**Output** :
+```json
+{
+  "detections": [
+    {
+      "class": "open",
+      "confidence": 0.87,
+      "bbox": [100, 150, 200, 250]  // x1, y1, x2, y2
+    }
+  ]
+}
+```
+
+### POST /api/diagnose
+**Input** :
+```json
+{
+  "defects": [
+    {"type": "open", "confidence": 0.87},
+    {"type": "short", "confidence": 0.92}
+  ]
+}
+```
+**Output** :
+```json
+{
+  "diagnosis": "Texte généré par Claude...",
+  "recommendations": ["Rec 1", "Rec 2"]
+}
+```
+
+## Tests
+
+### Backend
+- Utiliser pytest
+- Mocker le modèle YOLO pour les tests unitaires
+- Tester les endpoints avec TestClient de FastAPI
+
+### Frontend
+- Tests unitaires avec Vitest (à configurer)
+- Tests d'intégration pour les flux upload → annotation
+
+## Déploiement
+
+1. **Build frontend** : `cd apps/web && npm run build`
+2. **Servir le build** : Via FastAPI StaticFiles ou serveur séparé (Nginx)
+3. **API** : Uvicorn avec workers (`uvicorn apps.api.main:app --workers 4`)
+4. **Modèle** : S'assurer que `best.pt` est accessible
+
+## Ressources
+
+- **YOLOv11 Docs** : https://docs.ultralytics.com/
+- **FastAPI Docs** : https://fastapi.tiangolo.com/
+- **Anthropic API** : https://docs.anthropic.com/
+- **DeepPCB Dataset** : https://github.com/tangsanli5201/DeepPCB
