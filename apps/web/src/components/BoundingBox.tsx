@@ -11,7 +11,7 @@ interface BoundingBoxProps {
 
 export function BoundingBox({ detection, isSelected, onClick, scale }: BoundingBoxProps) {
   const [x1, y1, x2, y2] = detection.bbox
-  const color = DEFECT_COLORS[detection.class]
+  const color = DEFECT_COLORS[detection.class_name]
 
   return (
     <Rect

@@ -30,10 +30,22 @@ export function useAnalyze(): UseAnalyzeResult {
     setRepairSheet(null)
 
     try {
+      // Get image dimensions from file
+      const img = new Image()
+      const imageUrl = URL.createObjectURL(file)
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => {
+          setImageSize({ width: img.naturalWidth, height: img.naturalHeight })
+          resolve()
+        }
+        img.onerror = reject
+        img.src = imageUrl
+      })
+
       const formData = new FormData()
       formData.append("file", file)
 
-      const response = await fetch(`${config.apiBaseUrl}/analyze`, {
+      const response = await fetch(`${config.apiBaseUrl}/api/analyze`, {
         method: "POST",
         body: formData,
       })
@@ -44,7 +56,6 @@ export function useAnalyze(): UseAnalyzeResult {
 
       const data: AnalyzeResponse = await response.json()
       setDetections(data.detections)
-      setImageSize(data.image_size)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred during analysis")
     } finally {
@@ -57,7 +68,7 @@ export function useAnalyze(): UseAnalyzeResult {
     setError(null)
 
     try {
-      const response = await fetch(`${config.apiBaseUrl}/diagnose`, {
+      const response = await fetch(`${config.apiBaseUrl}/api/diagnose`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

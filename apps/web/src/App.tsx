@@ -98,7 +98,7 @@ function App() {
                         : "hover:bg-gray-50 text-gray-700"
                     }`}
                   >
-                    <span className="font-medium">{detection.class}</span>
+                    <span className="font-medium">{detection.class_name}</span>
                     <span className="text-gray-500 ml-1">
                       ({(detection.confidence * 100).toFixed(0)}%)
                     </span>

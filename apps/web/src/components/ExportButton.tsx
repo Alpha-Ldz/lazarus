@@ -35,7 +35,7 @@ export function ExportButton({ detection, repairSheet, disabled }: ExportButtonP
 
     doc.setFontSize(11)
     doc.setFont("helvetica", "normal")
-    doc.text(`Type: ${DEFECT_LABELS[detection.class]}`, 20, y)
+    doc.text(`Type: ${DEFECT_LABELS[detection.class_name]}`, 20, y)
     y += 7
     doc.text(`Confidence: ${(detection.confidence * 100).toFixed(1)}%`, 20, y)
     y += 7

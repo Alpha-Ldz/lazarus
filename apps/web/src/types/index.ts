@@ -1,20 +1,22 @@
 export type DefectClass =
-  | "open_circuit"
+  | "open"
   | "short"
   | "mousebite"
   | "spur"
-  | "spurious_copper"
-  | "pin_hole"
+  | "copper"
+  | "pin-hole"
 
 export interface Detection {
-  class: DefectClass
+  class_id: number
+  class_name: DefectClass
   confidence: number
   bbox: [number, number, number, number] // [x1, y1, x2, y2]
 }
 
 export interface AnalyzeResponse {
+  success: boolean
   detections: Detection[]
-  image_size: { width: number; height: number }
+  image_annotated: string | null
 }
 
 export interface RepairSheet {
@@ -31,19 +33,19 @@ export interface DiagnoseResponse {
 }
 
 export const DEFECT_COLORS: Record<DefectClass, string> = {
-  open_circuit: "#ef4444",
+  open: "#ef4444",
   short: "#f97316",
   mousebite: "#eab308",
   spur: "#3b82f6",
-  spurious_copper: "#8b5cf6",
-  pin_hole: "#6b7280",
+  copper: "#8b5cf6",
+  "pin-hole": "#6b7280",
 }
 
 export const DEFECT_LABELS: Record<DefectClass, string> = {
-  open_circuit: "Open Circuit",
+  open: "Open Circuit",
   short: "Short",
   mousebite: "Mousebite",
   spur: "Spur",
-  spurious_copper: "Spurious Copper",
-  pin_hole: "Pin Hole",
+  copper: "Spurious Copper",
+  "pin-hole": "Pin Hole",
 }

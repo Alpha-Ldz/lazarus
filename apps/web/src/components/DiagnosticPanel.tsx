@@ -53,8 +53,8 @@ export function DiagnosticPanel({
     )
   }
 
-  const defectColor = DEFECT_COLORS[selectedDetection.class]
-  const defectLabel = DEFECT_LABELS[selectedDetection.class]
+  const defectColor = DEFECT_COLORS[selectedDetection.class_name]
+  const defectLabel = DEFECT_LABELS[selectedDetection.class_name]
 
   return (
     <div className="h-full flex flex-col gap-4 overflow-y-auto">
