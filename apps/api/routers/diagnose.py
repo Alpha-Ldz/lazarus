@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Literal
 
-import httpx
+import litellm
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, ValidationError
 
@@ -89,52 +89,52 @@ Detected defects:
 
 Provide a repair sheet for the most critical defect."""
 
-    # Appeler le LLM via Ollama
+    # Appeler le LLM via LiteLLM
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            ollama_response = await client.post(
-                f"{config['base_url']}/v1/chat/completions",
-                json={
-                    "model": config["model"],
-                    "messages": [
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                    "temperature": config["temperature"],
-                    "max_tokens": config["max_tokens"],
-                },
-            )
-            ollama_response.raise_for_status()
-            data = ollama_response.json()
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ]
 
-            # Récupérer le contenu de la réponse
-            llm_text = data["choices"][0]["message"]["content"].strip()
+        # Construire les paramètres pour LiteLLM
+        llm_params = {
+            "model": config["model"],
+            "messages": messages,
+            "temperature": config["temperature"],
+            "max_tokens": config["max_tokens"],
+        }
 
-        # Parser le JSON
-        try:
-            repair_data = json.loads(llm_text)
-        except json.JSONDecodeError as e:
-            raise HTTPException(
-                status_code=422,
-                detail=f"Malformed LLM JSON response: {e}",
-            )
+        # Ajouter api_key et base_url si définis
+        if config.get("api_key"):
+            llm_params["api_key"] = config["api_key"]
+        if config.get("base_url"):
+            llm_params["base_url"] = config["base_url"]
 
-        # Valider avec Pydantic
-        try:
-            repair_sheet = RepairSheet(**repair_data)
-        except ValidationError as e:
-            raise HTTPException(
-                status_code=422,
-                detail=f"Invalid repair sheet structure: {e}",
-            )
-
-        return DiagnoseResponse(repair_sheet=repair_sheet)
-
-    except HTTPException:
-        raise
+        llm_response = await litellm.acompletion(**llm_params)
+        llm_text = llm_response.choices[0].message.content.strip()
     except Exception as e:
         # Ne jamais logger l'api_key
         error_msg = str(e)
         if config.get("api_key") in error_msg:
             error_msg = error_msg.replace(config["api_key"], "***")
         raise HTTPException(status_code=500, detail=f"LLM error: {error_msg}")
+
+    # Parser le JSON
+    try:
+        repair_data = json.loads(llm_text)
+    except json.JSONDecodeError as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Malformed LLM JSON response: {e}",
+        )
+
+    # Valider avec Pydantic
+    try:
+        repair_sheet = RepairSheet(**repair_data)
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid repair sheet structure: {e}",
+        )
+
+    return DiagnoseResponse(repair_sheet=repair_sheet)
