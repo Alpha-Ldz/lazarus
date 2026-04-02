@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react"
 import type { Detection, AnalyzeResponse, RepairSheet, DiagnoseResponse } from "@/types"
-
-const API_BASE_URL = "http://localhost:8000"
+import { config } from "@/config"
 
 interface UseAnalyzeResult {
   isAnalyzing: boolean
@@ -34,7 +33,7 @@ export function useAnalyze(): UseAnalyzeResult {
       const formData = new FormData()
       formData.append("file", file)
 
-      const response = await fetch(`${API_BASE_URL}/analyze`, {
+      const response = await fetch(`${config.apiBaseUrl}/analyze`, {
         method: "POST",
         body: formData,
       })
@@ -58,7 +57,7 @@ export function useAnalyze(): UseAnalyzeResult {
     setError(null)
 
     try {
-      const response = await fetch(`${API_BASE_URL}/diagnose`, {
+      const response = await fetch(`${config.apiBaseUrl}/diagnose`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
