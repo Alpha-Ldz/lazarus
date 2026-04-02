@@ -4,10 +4,10 @@ Router pour l'analyse d'images PCB avec YOLO.
 
 import base64
 import io
-from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, File, HTTPException, Request, UploadFile
+from PIL import Image
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -53,11 +53,12 @@ async def analyze_image(
     if file.content_type not in ["image/jpeg", "image/png"]:
         raise HTTPException(status_code=400, detail="Format d'image non supporté. Utilisez JPEG ou PNG.")
 
-    # Lire l'image
+    # Lire l'image et convertir en PIL
     contents = await file.read()
+    image = Image.open(io.BytesIO(contents))
 
     # Effectuer l'inférence
-    results = model(contents, verbose=False)
+    results = model(image, verbose=False)
 
     detections = []
     for r in results:
@@ -79,8 +80,6 @@ async def analyze_image(
         annotated = results[0].plot()
 
         # Convertir en base64
-        from PIL import Image
-
         img = Image.fromarray(annotated[..., ::-1])  # BGR to RGB
         buffer = io.BytesIO()
         img.save(buffer, format="JPEG", quality=85)
