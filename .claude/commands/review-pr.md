@@ -54,15 +54,14 @@ git push
 
 ### 5. Répondre aux commentaires
 
-Pour chaque commentaire traité, réponds avec les modifications effectuées :
+Ajoute un commentaire à la PR résumant les modifications :
 
 ```bash
-gh api repos/:owner/:repo/pulls/comments/:comment_id/replies \
-  -X POST \
-  -f body="<description des modifications>"
+gh pr comment $ARGUMENTS --body "<description des modifications>"
 ```
 
 Le message de réponse doit :
+- Référencer le commentaire original (ex: "Re: configuration API")
 - Confirmer que la modification a été faite
-- Décrire brièvement les changements
-- Mentionner le commit si pertinent
+- Mentionner le hash du commit
+- Décrire brièvement les changements avec un extrait de code si pertinent
