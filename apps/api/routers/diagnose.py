@@ -91,16 +91,22 @@ Provide a repair sheet for the most critical defect."""
 
     # Appeler le LLM via LiteLLM
     try:
-        response = completion(
-            model=f"{config['provider']}/{config['model']}",
-            messages=[
+        completion_params = {
+            "model": f"{config['provider']}/{config['model']}",
+            "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_prompt},
             ],
-            api_key=config["api_key"],
-            temperature=config["temperature"],
-            max_tokens=config["max_tokens"],
-        )
+            "api_key": config["api_key"],
+            "temperature": config["temperature"],
+            "max_tokens": config["max_tokens"],
+        }
+
+        # Ajouter base_url si présent (nécessaire pour Ollama local)
+        if "base_url" in config:
+            completion_params["base_url"] = config["base_url"]
+
+        response = completion(**completion_params)
 
         llm_text = response.choices[0].message.content.strip()
 
