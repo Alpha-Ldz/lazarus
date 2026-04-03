@@ -4,8 +4,13 @@
       "Bash(ls:*)",
       "Bash(mkdir:*)",
       "Bash(tree:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(wc:*)",
       "Bash(curl:*)",
-
       "Bash(git checkout:*)",
       "Bash(git pull:*)",
       "Bash(git push:*)",
@@ -19,25 +24,19 @@
       "Bash(git rebase:*)",
       "Bash(git stash:*)",
       "Bash(git fetch:*)",
-
       "Bash(gh issue:*)",
       "Bash(gh pr:*)",
       "Bash(gh repo:*)",
       "Bash(gh api:*)",
-
       "Bash(npm:*)",
       "Bash(npx:*)",
-      "Bash(pnpm:*)",
-      "Bash(yarn:*)",
-      "Bash(bun:*)",
-
-      "Bash(uv:*)",
-      "Bash(pip:*)",
-      "Bash(python:*)",
-
-      "Bash(nix-shell:*)",
-      "Bash(nix-env:*)",
-
+      "Bash(uv sync:*)",
+      "Bash(uv run:*)",
+      "Bash(uv add:*)",
+      "Bash(uv remove:*)",
+      "Bash(uv lock:*)",
+      "Bash(uv pip:*)",
+      "Bash(uv venv:*)",
       "WebFetch(domain:github.com)"
     ]
   }

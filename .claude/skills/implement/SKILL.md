@@ -4,96 +4,89 @@ description: "Implement a GitHub issue step-by-step with verification checkpoint
 argument-hint: "<issue-number>"
 ---
 
-# Implement Issue $ARGUMENTS
+# STOP. READ THIS FIRST.
 
-You are implementing a GitHub issue. Follow this procedure EXACTLY.
-Do NOT skip steps. Do NOT improvise.
+You are NOT explaining code. You are NOT answering questions.
+You are IMPLEMENTING a GitHub issue by WRITING CODE and RUNNING COMMANDS.
 
-## Phase 1 — Read the issue
+Your job:
+
+1. Read the issue
+2. Create a branch
+3. Edit files exactly as described in the issue steps
+4. Run verification commands after each step
+5. Commit and push
+6. Create a PR
+
+DO NOT analyze or summarize code.
+DO NOT ask the user questions.
+DO NOT stop until you have written `echo "✅ DONE"`.
+
+If you are unsure, re-read the issue. The issue contains ALL the information you need.
+
+---
+
+## NOW: Implement issue #$ARGUMENTS
+
+### Phase 1 — Read the issue
+
+Run this command NOW:
 
 ```bash
 gh issue view $ARGUMENTS
 ```
 
-Read the output carefully. Identify:
+From the output, identify:
 
-1. The list of files to CREATE or MODIFY
-2. The numbered steps
-3. The verification commands for each step
-4. The "NE pas faire" section
+- The STEPS (numbered)
+- The FILES to create or modify
+- The VERIFICATION COMMANDS for each step
 
-## Phase 2 — Setup branch
+### Phase 2 — Create a branch
+
+Run these commands NOW:
 
 ```bash
 git checkout main
 git pull origin main
+git checkout -b feature/plland/issue-$ARGUMENTS
 ```
 
-Determine branch name from the issue title:
+### Phase 3 — Execute steps ONE BY ONE
 
-- `enhancement` or `feature` label → `feature/plland/<kebab-case>`
-- `bug` or `fix` label → `fix/plland/<kebab-case>`
-- Default → `feature/plland/<kebab-case>`
+RULES:
 
-```bash
-git checkout -b <branch-name>
-```
+- Execute step 1 FIRST. Do NOT read ahead.
+- After each step, run its verification command.
+- If verification FAILS: fix and retry (max 3 attempts).
+- If verification PASSES: commit and move to next step.
+- Commit message format: `feat(scope): description — Refs #$ARGUMENTS`
 
-## Phase 3 — Execute steps ONE BY ONE
+START WITH STEP 1 NOW. Do NOT plan. Do NOT summarize. WRITE CODE.
 
-For EACH step in the issue:
-
-1. Read the step instructions
-2. Make the changes to the SINGLE file specified
-3. Run the verification command for that step
-4. If verification FAILS: fix the error, re-run verification
-5. If verification PASSES: commit with message `<type>(<scope>): <step-description> — Refs #$ARGUMENTS`
-6. Move to the next step
-
-CRITICAL RULES:
-
-- ONE step at a time. Do NOT batch multiple steps.
-- ONE file per step. Do NOT edit multiple files in one step.
-- ALWAYS run the verification command before moving on.
-- If you are UNSURE about something, re-read the issue. Do NOT guess.
-
-## Phase 4 — Final verification
-
-Run ALL commands from the "Vérification finale" section of the issue.
-Every command must pass.
+### Phase 4 — After ALL steps are done
 
 ```bash
-# Typical final checks
-uv run ruff check apps/
+# Final verification
 cd apps/web && npx tsc --noEmit
-```
+uv run ruff check apps/
 
-## Phase 5 — Create PR
-
-```bash
-git push -u origin <branch-name>
+# Push and create PR
+git push -u origin feature/plland/issue-$ARGUMENTS
 gh pr create \
   --title "$(gh issue view $ARGUMENTS --json title -q .title)" \
-  --body "## Changes
+  --body "Closes #$ARGUMENTS
+
 $(git log --oneline main..HEAD | sed 's/^/- /')
 
-## Verification
-All verification commands from issue #$ARGUMENTS pass.
-
-Closes #$ARGUMENTS
-
 🤖 Generated with Claude Code"
-```
 
-## Phase 6 — Signal completion
-
-```bash
-echo "✅ DONE — PR created for issue #$ARGUMENTS"
+echo "✅ DONE"
 ```
 
 ## REMINDERS
 
-- Do NOT modify files not listed in the issue
-- Do NOT install packages not listed in the issue
-- Do NOT refactor code unrelated to the issue
-- If a verification fails after 3 attempts, STOP and explain the error
+- Do NOT explain code. WRITE code.
+- Do NOT ask questions. READ the issue.
+- Do NOT stop early. Finish ALL steps.
+- Do NOT modify files not listed in the issue.
