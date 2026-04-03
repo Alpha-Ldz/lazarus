@@ -1,6 +1,22 @@
 # Lazarus — PCB Repair Station
 
-## IMPORTANT — Read First
+## CRITICAL — Python package management
+
+This project uses **uv**, NOT pip, NOT poetry, NOT conda.
+NEVER run `pip install`, `pip3 install`, `python -m pip`, or `python setup.py`.
+NEVER run `python` or `python3` directly.
+
+Use these commands INSTEAD:
+| ❌ NEVER | ✅ ALWAYS |
+|----------|----------|
+| `pip install X` | `uv add X` |
+| `python script.py` | `uv run python script.py` |
+| `python -m pytest` | `uv run pytest` |
+| `python -c "..."` | `uv run python -c "..."` |
+| `pip freeze` | `uv pip list` |
+| `pip install -r req.txt` | `uv sync` |
+
+## IMPORTANT — Read Before Coding
 
 You are working on a monorepo with a Python backend and a React frontend.
 NEVER modify files outside the scope of the current issue.
@@ -16,7 +32,7 @@ lazarus/
 │   │   ├── main.py        # App entrypoint + CORS + lifespan
 │   │   ├── routers/
 │   │   │   ├── analyze.py  # POST /api/analyze — YOLO detection
-│   │   │   └── diagnose.py # POST /api/diagnose — Claude diagnosis
+│   │   │   └── diagnose.py # POST /api/diagnose — LLM diagnosis
 │   │   ├── models/
 │   │   │   └── best.pt     # YOLOv11 weights (symlink)
 │   │   └── services/       # Business logic
@@ -24,19 +40,29 @@ lazarus/
 │       └── src/
 │           ├── components/  # DropZone, PCBViewer, BoundingBox, DiagnosticPanel, ExportButton
 │           ├── hooks/       # useAnalyze.ts
+│           ├── config/      # index.ts — API base URL from VITE_API_BASE_URL
 │           └── types/       # index.ts — ALL types go here
 ├── ml/                    # YOLOv11 training scripts
-└── pyproject.toml
+└── pyproject.toml         # Python deps managed by uv
 ```
 
 ## Commands
 
 ```bash
-# Backend
-cd apps/api && uv run uvicorn apps.api.main:app --reload
+# Install Python deps
+uv sync
 
-# Frontend
+# Start backend
+uv run uvicorn apps.api.main:app --reload
+
+# Start frontend
 cd apps/web && npm run dev
+
+# Add a Python dependency
+uv add <package-name>
+
+# Run any Python script
+uv run python <script.py>
 
 # Test API analyze
 curl -s -X POST http://localhost:8000/api/analyze -F "file=@test.jpg" | python -m json.tool
@@ -44,13 +70,13 @@ curl -s -X POST http://localhost:8000/api/analyze -F "file=@test.jpg" | python -
 # Test API diagnose
 curl -s -X POST http://localhost:8000/api/diagnose \
   -H "Content-Type: application/json" \
-  -d '{"defects":[{"class_name":"short","confidence":0.92,"bbox":[10,20,50,60]}]}' \
-  | python -m json.tool
+  -d '{"detections":[{"class_name":"short","confidence":0.92,"bbox":[10,20,50,60]}]}' \
+  | uv run python -m json.tool
 
 # Type-check frontend
 cd apps/web && npx tsc --noEmit
 
-# Lint
+# Lint Python
 uv run ruff check apps/
 ```
 
@@ -66,15 +92,19 @@ uv run ruff check apps/
 
 ```typescript
 // apps/web/src/types/index.ts
-interface Detection {
-  class_name: string; // "short" | "open_circuit" | "mousebite" | "spur" | "spurious_copper" | "pin_hole"
-  confidence: number; // 0 to 1
-  bbox: [number, number, number, number]; // [x1, y1, x2, y2]
-}
+type DefectClass =
+  | "open"
+  | "short"
+  | "mousebite"
+  | "spur"
+  | "copper"
+  | "pin-hole";
 
-interface AnalyzeResponse {
-  detections: Detection[];
-  image_size: { width: number; height: number };
+interface Detection {
+  class_id: number;
+  class_name: DefectClass;
+  confidence: number;
+  bbox: [number, number, number, number];
 }
 
 interface RepairSheet {
@@ -83,7 +113,7 @@ interface RepairSheet {
   severity: "low" | "medium" | "high";
   steps: string[];
   estimated_cost: string;
-  difficulty: number; // 1 to 5
+  difficulty: number;
 }
 ```
 
@@ -95,6 +125,7 @@ interface RepairSheet {
 
 ## Anti-patterns — DO NOT
 
+- Do NOT use `pip`, `pip3`, `python`, or `python3` directly — use `uv run` and `uv add`
 - Do NOT create new type files — put types in `apps/web/src/types/index.ts`
 - Do NOT install packages without being told to in the issue
 - Do NOT modify `apps/api/main.py` unless the issue explicitly says to
