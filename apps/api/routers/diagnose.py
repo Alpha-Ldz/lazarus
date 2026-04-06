@@ -19,43 +19,33 @@ PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "diagnose.txt"
 SYSTEM_PROMPT = PROMPT_PATH.read_text(encoding="utf-8").strip()
 
 
-class Detection(BaseModel):
-    """Une détection YOLO."""
-
-    class_: str = Field(..., alias="class")
-    confidence: float
-    bbox: list[float]  # [x1, y1, x2, y2]
-
-
-class ImageSize(BaseModel):
-    """Dimensions de l'image."""
-
-    width: int
-    height: int
-
-
 class DiagnoseRequest(BaseModel):
     """Requête de diagnostic."""
 
-    detections: list[Detection]
-    image_size: ImageSize
+    defects: list[dict] | None = None  # Ancien format (rétrocompatible)
+    detections: list[dict] | None = None  # Nouveau format envoyé par le frontend
+    context: str | None = None
+
+    def get_defects(self) -> list[dict]:
+        """Retourne les défauts, peu importe le nom du champ envoyé."""
+        return self.detections or self.defects or []
 
 
-class RepairSheet(BaseModel):
+class RepairSheetModel(BaseModel):
     """Fiche de réparation structurée."""
 
     component: str
     defect_type: str
-    severity: Literal["low", "medium", "high"]
+    severity: str  # "low" | "medium" | "high"
     steps: list[str]
     estimated_cost: str
-    difficulty: int = Field(..., ge=1, le=5)
+    difficulty: int  # 1 à 5
 
 
 class DiagnoseResponse(BaseModel):
-    """Réponse du diagnostic."""
+    """Réponse du diagnostic — format attendu par le frontend."""
 
-    repair_sheet: RepairSheet
+    repair_sheet: RepairSheetModel
 
 
 @router.post("/", response_model=DiagnoseResponse)
