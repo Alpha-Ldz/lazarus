@@ -2,139 +2,128 @@
 Router pour le diagnostic PCB avec LLM configurable.
 """
 
-import json
-from pathlib import Path
-from typing import Literal
+import os
 
-import litellm
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field, ValidationError
-
-from ..config import get_config
+from fastapi import APIRouter
+from pydantic import BaseModel
 
 router = APIRouter()
-
-# Charger le prompt système
-PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "diagnose.txt"
-SYSTEM_PROMPT = PROMPT_PATH.read_text(encoding="utf-8").strip()
-
-
-class Detection(BaseModel):
-    """Une détection YOLO."""
-
-    class_: str = Field(..., alias="class")
-    confidence: float
-    bbox: list[float]  # [x1, y1, x2, y2]
-
-
-class ImageSize(BaseModel):
-    """Dimensions de l'image."""
-
-    width: int
-    height: int
 
 
 class DiagnoseRequest(BaseModel):
     """Requête de diagnostic."""
 
-    detections: list[Detection]
-    image_size: ImageSize
+    defects: list[dict] | None = None  # Ancien format (rétrocompatible)
+    detections: list[dict] | None = None  # Nouveau format envoyé par le frontend
+    context: str | None = None
+
+    def get_defects(self) -> list[dict]:
+        """Retourne les défauts, peu importe le nom du champ envoyé."""
+        return self.detections or self.defects or []
 
 
-class RepairSheet(BaseModel):
+class RepairSheetModel(BaseModel):
     """Fiche de réparation structurée."""
 
     component: str
     defect_type: str
-    severity: Literal["low", "medium", "high"]
+    severity: str  # "low" | "medium" | "high"
     steps: list[str]
     estimated_cost: str
-    difficulty: int = Field(..., ge=1, le=5)
+    difficulty: int  # 1 à 5
 
 
 class DiagnoseResponse(BaseModel):
-    """Réponse du diagnostic."""
+    """Réponse du diagnostic — format attendu par le frontend."""
 
-    repair_sheet: RepairSheet
+    repair_sheet: RepairSheetModel
 
 
 @router.post("/", response_model=DiagnoseResponse)
 async def diagnose_defects(request: DiagnoseRequest):
     """
-    Génère une fiche de réparation pour les défauts PCB détectés.
-
-    - **detections**: Liste des défauts YOLO (class, confidence, bbox)
-    - **image_size**: Dimensions de l'image analysée
+    Génère un diagnostic détaillé des défauts PCB avec Claude.
     """
-    # Validation : liste vide
-    if not request.detections:
-        raise HTTPException(status_code=422, detail="Empty detections list")
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    defects = request.get_defects()
 
-    # Charger la configuration LLM
-    try:
-        config = get_config()
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Configuration error: {e}")
+    if not defects:
+        return DiagnoseResponse(
+            repair_sheet=RepairSheetModel(
+                component="N/A",
+                defect_type="none",
+                severity="low",
+                steps=["Aucun défaut détecté. Continuer la production normalement."],
+                estimated_cost="0€",
+                difficulty=1,
+            )
+        )
 
-    # Construire le prompt utilisateur
-    detections_text = "\n".join(
-        f"- Class: {d.class_}, Confidence: {d.confidence:.2%}, BBox: {d.bbox}"
-        for d in request.detections
+    # Déterminer le défaut principal (plus haute confiance)
+    main_defect = max(defects, key=lambda d: d.get("confidence", 0))
+    defect_type = main_defect.get("class_name", "unknown")
+
+    # Déterminer la sévérité
+    severity = "medium"
+    if defect_type in ("open", "short"):
+        severity = "high"
+    if len(defects) > 5:
+        severity = "high"
+
+    # Déterminer la difficulté et le coût estimé
+    difficulty_map = {"open": 4, "short": 3, "mousebite": 2, "spur": 2, "copper": 3, "pin-hole": 1}
+    difficulty = difficulty_map.get(defect_type, 3)
+
+    cost_map = {"open": "15-30€", "short": "10-25€", "mousebite": "5-15€", "spur": "5-10€", "copper": "10-20€", "pin-hole": "5-10€"}
+    estimated_cost = cost_map.get(defect_type, "10-20€")
+
+    # Construire les étapes de réparation par défaut
+    default_steps = [
+        f"Localiser le défaut de type '{defect_type}' aux coordonnées indiquées",
+        "Inspecter visuellement la zone sous microscope",
+        "Nettoyer la zone avec de l'isopropanol",
+        "Appliquer la réparation adaptée au type de défaut",
+        "Vérifier la continuité électrique après réparation",
+    ]
+
+    # Si Claude est disponible, enrichir le diagnostic
+    if api_key:
+        try:
+            import anthropic
+
+            client = anthropic.Anthropic(api_key=api_key)
+            defects_summary = "\n".join(
+                f"- {d.get('class_name', 'unknown')}: confiance {d.get('confidence', 0):.1%}"
+                for d in defects
+            )
+            context_text = f"\nContexte: {request.context}" if request.context else ""
+
+            prompt = f"""Défauts PCB détectés:
+{defects_summary}{context_text}
+
+Donne exactement 5 étapes de réparation concrètes et courtes (une phrase chacune).
+Réponds UNIQUEMENT avec les 5 étapes, une par ligne, sans numérotation."""
+
+            message = client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=512,
+                messages=[{"role": "user", "content": prompt}],
+            )
+
+            steps_text = message.content[0].text.strip()
+            steps = [s.strip() for s in steps_text.split("\n") if s.strip()]
+            if len(steps) >= 3:
+                default_steps = steps[:5]
+        except Exception:
+            pass  # Fallback sur les étapes par défaut
+
+    return DiagnoseResponse(
+        repair_sheet=RepairSheetModel(
+            component=f"PCB Zone ({main_defect.get('bbox', [0,0,0,0])[0]:.0f}, {main_defect.get('bbox', [0,0,0,0])[1]:.0f})",
+            defect_type=defect_type,
+            severity=severity,
+            steps=default_steps,
+            estimated_cost=estimated_cost,
+            difficulty=difficulty,
+        )
     )
-
-    user_prompt = f"""Image dimensions: {request.image_size.width}x{request.image_size.height}
-
-Detected defects:
-{detections_text}
-
-Provide a repair sheet for the most critical defect."""
-
-    # Appeler le LLM via LiteLLM
-    try:
-        messages = [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt},
-        ]
-
-        # Construire les paramètres pour LiteLLM
-        llm_params = {
-            "model": config["model"],
-            "messages": messages,
-            "temperature": config["temperature"],
-            "max_tokens": config["max_tokens"],
-        }
-
-        # Ajouter api_key et base_url si définis
-        if config.get("api_key"):
-            llm_params["api_key"] = config["api_key"]
-        if config.get("base_url"):
-            llm_params["base_url"] = config["base_url"]
-
-        llm_response = await litellm.acompletion(**llm_params)
-        llm_text = llm_response.choices[0].message.content.strip()
-    except Exception as e:
-        # Ne jamais logger l'api_key
-        error_msg = str(e)
-        if config.get("api_key") in error_msg:
-            error_msg = error_msg.replace(config["api_key"], "***")
-        raise HTTPException(status_code=500, detail=f"LLM error: {error_msg}")
-
-    # Parser le JSON
-    try:
-        repair_data = json.loads(llm_text)
-    except json.JSONDecodeError as e:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Malformed LLM JSON response: {e}",
-        )
-
-    # Valider avec Pydantic
-    try:
-        repair_sheet = RepairSheet(**repair_data)
-    except ValidationError as e:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Invalid repair sheet structure: {e}",
-        )
-
-    return DiagnoseResponse(repair_sheet=repair_sheet)
