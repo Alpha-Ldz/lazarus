@@ -1,5 +1,5 @@
 """
-Script de test pour le modèle YOLOv11 entraîné sur DeepPCB.
+Script de test pour le modèle YOLOv11 entraîné sur DsPCBSD+.
 """
 
 import argparse
@@ -9,11 +9,15 @@ from ultralytics import YOLO
 
 # Configuration par défaut
 ML_DIR = Path(__file__).parent
-DEFAULT_MODEL = ML_DIR / "runs" / "detect" / "deeppcb_yolo11" / "weights" / "best.pt"
-DEFAULT_DATA = ML_DIR / "datasets" / "deeppcb_yolo" / "deeppcb.yaml"
+DEFAULT_MODEL = ML_DIR / "runs" / "detect" / "dspcbsd_yolo11" / "weights" / "best.pt"
+DEFAULT_DATA = ML_DIR / "datasets" / "dspcbsd" / "dspcbsd.yaml"
 SAMPLE_IMAGE = ML_DIR / "data" / "DeepPCB" / "PCBData" / "group00041" / "00041" / "00041000_test.jpg"
 
-CLASSES = ["open", "short", "mousebite", "spur", "copper", "pin-hole"]
+CLASSES = [
+    "short", "spur", "spurious_copper", "open", "mousebite",
+    "hole_breakout", "conductor_scratch", "conductor_foreign_object",
+    "base_material_foreign_object",
+]
 
 
 def validate(model_path: Path, data_path: Path):
@@ -113,7 +117,7 @@ def export_model(model_path: Path, format: str = "onnx"):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Test du modèle YOLOv11 DeepPCB")
+    parser = argparse.ArgumentParser(description="Test du modèle YOLOv11 DsPCBSD+")
     parser.add_argument("--model", type=Path, default=DEFAULT_MODEL, help="Chemin vers le modèle .pt")
 
     subparsers = parser.add_subparsers(dest="command", help="Commande à exécuter")
