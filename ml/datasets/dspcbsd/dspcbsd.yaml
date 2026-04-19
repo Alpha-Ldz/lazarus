@@ -3,7 +3,7 @@
 # Source: https://doi.org/10.6084/m9.figshare.24970329.v1
 # Paper: https://doi.org/10.1038/s41597-024-03656-8
 
-path: datasets/dspcbsd  # sera résolu relativement à ML_DIR
+path: /home/peuleu/lazarus/ml/datasets/dspcbsd
 train: images/train
 val: images/val
 
