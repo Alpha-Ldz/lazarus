@@ -1,10 +1,13 @@
 export type DefectClass =
-  | "open"
   | "short"
-  | "mousebite"
   | "spur"
-  | "copper"
-  | "pin-hole"
+  | "spurious_copper"
+  | "open"
+  | "mousebite"
+  | "hole_breakout"
+  | "conductor_scratch"
+  | "conductor_foreign_object"
+  | "base_material_foreign_object"
 
 export interface Detection {
   class_id: number
@@ -33,19 +36,25 @@ export interface DiagnoseResponse {
 }
 
 export const DEFECT_COLORS: Record<DefectClass, string> = {
-  open: "#ef4444",
   short: "#f97316",
-  mousebite: "#eab308",
   spur: "#3b82f6",
-  copper: "#8b5cf6",
-  "pin-hole": "#6b7280",
+  spurious_copper: "#8b5cf6",
+  open: "#ef4444",
+  mousebite: "#eab308",
+  hole_breakout: "#ec4899",
+  conductor_scratch: "#14b8a6",
+  conductor_foreign_object: "#f59e0b",
+  base_material_foreign_object: "#6b7280",
 }
 
 export const DEFECT_LABELS: Record<DefectClass, string> = {
-  open: "Open Circuit",
   short: "Short",
-  mousebite: "Mousebite",
   spur: "Spur",
-  copper: "Spurious Copper",
-  "pin-hole": "Pin Hole",
+  spurious_copper: "Spurious Copper",
+  open: "Open Circuit",
+  mousebite: "Mousebite",
+  hole_breakout: "Hole Breakout",
+  conductor_scratch: "Conductor Scratch",
+  conductor_foreign_object: "Conductor Foreign Object",
+  base_material_foreign_object: "Base Material Foreign Object",
 }

@@ -12,7 +12,19 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
-CLASSES = ["open", "short", "mousebite", "spur", "copper", "pin-hole"]
+# Classes DsPCBSD+ (9 catégories de défauts PCB industriels)
+# Ref: https://doi.org/10.1038/s41597-024-03656-8
+CLASSES = [
+    "short",                         # 0 - Court-circuit
+    "spur",                          # 1 - Excroissance
+    "spurious_copper",               # 2 - Cuivre parasite
+    "open",                          # 3 - Circuit ouvert
+    "mousebite",                     # 4 - Morsure de souris
+    "hole_breakout",                 # 5 - Débordement de perçage
+    "conductor_scratch",             # 6 - Rayure conducteur
+    "conductor_foreign_object",      # 7 - Corps étranger sur conducteur
+    "base_material_foreign_object",  # 8 - Corps étranger sur substrat
+]
 
 
 class Detection(BaseModel):
