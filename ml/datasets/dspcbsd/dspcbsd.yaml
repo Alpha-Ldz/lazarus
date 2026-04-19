@@ -1,0 +1,19 @@
+# DsPCBSD+ - Dataset of PCB Surface Defect
+# 10 259 images, 20 276 annotations, 9 classes
+# Source: https://doi.org/10.6084/m9.figshare.24970329.v1
+# Paper: https://doi.org/10.1038/s41597-024-03656-8
+
+path: datasets/dspcbsd  # sera résolu relativement à ML_DIR
+train: images/train
+val: images/val
+
+names:
+  0: short
+  1: spur
+  2: spurious_copper
+  3: open
+  4: mousebite
+  5: hole_breakout
+  6: conductor_scratch
+  7: conductor_foreign_object
+  8: base_material_foreign_object
