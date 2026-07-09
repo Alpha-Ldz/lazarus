@@ -1,123 +1,200 @@
 # Lazarus
 
-Système de détection et diagnostic de défauts sur circuits imprimés (PCB) utilisant YOLOv11 et Claude AI.
+**Automated PCB defect detection and repair guidance using computer vision and LLM-powered diagnostics.**
+
+Lazarus helps electronics technicians identify and repair PCB manufacturing defects by combining YOLOv11 object detection with AI-generated repair instructions.
+
+## The Problem
+
+Printed Circuit Board (PCB) inspection is traditionally a manual, time-consuming process requiring experienced technicians. Automated Optical Inspection (AOI) machines exist but are expensive and often limited to pass/fail decisions without actionable repair guidance.
+
+**Lazarus differentiates itself by**:
+- Providing **repair instructions**, not just defect detection
+- Using LLMs to generate context-aware diagnostic sheets
+- Being **open-source** and runnable on standard hardware
+
+**Roadmap** (not yet implemented):
+- XY probe station integration for electrical continuity testing
+- Automated test point generation from PCB gerber files
 
 ## Architecture
 
-Ce projet est organisé en monorepo avec trois composants principaux :
+```mermaid
+flowchart LR
+    subgraph Frontend
+        A[React + Vite]
+    end
+
+    subgraph Backend
+        B[FastAPI]
+        C[YOLOv11]
+        D[LiteLLM]
+    end
+
+    subgraph Models
+        E[YOLO Weights]
+        F[Ollama / Claude]
+    end
+
+    A -->|POST /api/analyze| B
+    B --> C
+    C --> E
+    A -->|POST /api/diagnose| B
+    B --> D
+    D --> F
+```
+
+**Data flow**:
+1. User uploads PCB image via web interface
+2. Backend runs YOLOv11 inference, returns bounding boxes + class labels
+3. User clicks a defect to request diagnosis
+4. Backend sends defect context to LLM, returns repair sheet
+5. User can export PDF report
+
+## Tech Stack
+
+| Layer | Technologies |
+|-------|-------------|
+| **ML / Vision** | YOLOv11 (Ultralytics), PyTorch, trained on [DsPCBSD+](https://doi.org/10.1038/s41597-024-03656-8) (9 defect classes) |
+| **Backend** | FastAPI, Python 3.13, LiteLLM, Pillow, uv |
+| **Frontend** | React 19, TypeScript, Vite, TailwindCSS 4, React-Konva, jsPDF |
+| **LLM** | Configurable via LiteLLM: Ollama (default), Claude, OpenAI, etc. |
+
+### Defect Classes (DsPCBSD+ dataset)
+`short` · `spur` · `spurious_copper` · `open` · `mousebite` · `hole_breakout` · `conductor_scratch` · `conductor_foreign_object` · `base_material_foreign_object`
+
+## Getting Started
+
+### Prerequisites
+- Python 3.13+
+- Node.js 20+
+- [uv](https://docs.astral.sh/uv/) (Python package manager)
+- [Ollama](https://ollama.ai/) (optional, for local LLM inference)
+
+### 1. Clone and install
+
+```bash
+git clone https://github.com/your-username/lazarus.git
+cd lazarus
+
+# Python dependencies
+uv sync
+
+# Frontend dependencies
+cd apps/web && npm install && cd ../..
+```
+
+### 2. Download or train YOLO model
+
+**Option A**: Use a pre-trained model (contact maintainer or train your own)
+
+```bash
+# Create symlink to your trained weights
+ln -s /path/to/your/best.pt apps/api/models/best.pt
+```
+
+**Option B**: Train on DsPCBSD+ dataset
+
+```bash
+uv sync --extra ml
+uv run python ml/download_dspcbsd.py  # Download dataset
+uv run python ml/train_dspcbsd.py     # Train YOLOv11
+ln -s ../../ml/runs/detect/dspcbsd_yolo11/weights/best.pt apps/api/models/best.pt
+```
+
+### 3. Configure LLM (optional)
+
+Default config uses Ollama with Qwen. Edit `apps/api/config.yaml`:
+
+```yaml
+provider: "ollama"
+model: "ollama/qwen2.5:7b"
+base_url: "http://localhost:11434"
+```
+
+For Claude API, set `ANTHROPIC_API_KEY` and update config:
+
+```yaml
+provider: "anthropic"
+model: "claude-sonnet-4-20250514"
+```
+
+### 4. Run the application
+
+```bash
+# Terminal 1: Backend
+uv run uvicorn apps.api.main:app --reload
+
+# Terminal 2: Frontend
+cd apps/web && npm run dev
+```
+
+Open http://localhost:5173
+
+## API Reference
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/analyze` | POST | Upload PCB image, returns detected defects with bounding boxes |
+| `/api/diagnose` | POST | Send defect data, returns repair sheet with steps |
+| `/health` | GET | Health check, confirms model is loaded |
+| `/docs` | GET | Swagger UI interactive documentation |
+
+## Project Status
+
+**Current state**: Proof of Concept
+
+| Feature | Status |
+|---------|--------|
+| YOLO defect detection (9 classes) | Working |
+| Interactive bounding box viewer | Working |
+| LLM-generated repair sheets | Working |
+| PDF export | Working |
+| XY probe integration | Roadmap |
+| Gerber file parsing | Roadmap |
+| Multi-language support | Roadmap |
+
+## Media
+
+> Screenshots to be added
+
+![Upload interface](docs/media/01-upload.png)
+*Drag-and-drop PCB image upload*
+
+![Detection results](docs/media/02-detection.png)
+*YOLOv11 defect detection with bounding boxes*
+
+![Diagnostic panel](docs/media/03-diagnostic.png)
+*AI-generated repair instructions*
+
+![PDF export](docs/media/04-export.png)
+*Downloadable repair report*
+
+## Repository Structure
 
 ```
 lazarus/
 ├── apps/
-│   ├── api/          # Backend FastAPI
-│   │   ├── routers/  # Endpoints API (analyze, diagnose)
-│   │   └── models/   # Modèle YOLO (symlink)
-│   └── web/          # Frontend React + TypeScript
-│       └── src/      # Composants React
-├── ml/               # Pipeline ML
-│   ├── data/         # Dataset DeepPCB
-│   ├── datasets/     # Datasets YOLO formatés
-│   ├── runs/         # Résultats d'entraînement
-│   ├── notebooks/    # Notebooks Jupyter
-│   ├── train.py      # Script d'entraînement YOLOv11
-│   └── test.py       # Script de test
-└── packages/         # Packages partagés (si nécessaire)
+│   ├── api/                 # FastAPI backend
+│   │   ├── main.py          # App entrypoint
+│   │   ├── routers/         # API endpoints
+│   │   ├── config.yaml      # LLM configuration
+│   │   └── models/          # YOLO weights (gitignored)
+│   └── web/                 # React frontend
+│       └── src/
+│           ├── components/  # UI components
+│           ├── hooks/       # React hooks
+│           └── types/       # TypeScript interfaces
+├── ml/                      # ML training pipeline
+│   ├── train_dspcbsd.py     # Training script
+│   └── datasets/            # YOLO-formatted data (gitignored)
+└── docs/                    # Documentation
 ```
 
-### Stack Technique
+## Contributing
 
-**Backend (apps/api/)**
-- FastAPI 0.115+ avec Uvicorn
-- Python 3.13+
-- YOLOv11 (Ultralytics) pour la détection de défauts
-- Anthropic Claude API pour le diagnostic intelligent
-- Pillow pour le traitement d'images
+This is a portfolio project but contributions are welcome. Please open an issue before submitting PRs.
 
-**Frontend (apps/web/)**
-- React 19 avec TypeScript
-- Vite pour le build et le dev server
-- TailwindCSS 4 pour le styling
-- Konva/React-Konva pour l'annotation d'images
-- jsPDF pour l'export de rapports
-- React Dropzone pour l'upload de fichiers
+## License
 
-**ML Pipeline (ml/)**
-- YOLOv11 (Ultralytics)
-- PyTorch 2.11+
-- OpenCV pour le traitement d'images
-- Dataset DeepPCB (6 classes de défauts : open, short, mousebite, spur, copper, pin-hole)
-
-### Gestion des dépendances
-
-- **Python** : `uv` (modern Python package manager)
-- **Node.js** : `npm`
-
-## Démarrage rapide
-
-### 1. Backend FastAPI
-
-```bash
-# Installer les dépendances Python
-uv sync
-
-# Créer le symlink vers le modèle YOLO entraîné
-ln -s ../../../ml/runs/detect/deeppcb_yolo11/weights/best.pt apps/api/models/best.pt
-
-# Démarrer le serveur API
-uv run uvicorn apps.api.main:app --reload
-```
-
-L'API sera disponible sur `http://localhost:8000`
-
-### 2. Frontend React
-
-```bash
-# Aller dans le dossier web
-cd apps/web
-
-# Installer les dépendances
-npm install
-
-# Démarrer le serveur de développement
-npm run dev
-```
-
-Le frontend sera disponible sur `http://localhost:5173`
-
-### 3. Entraînement ML (optionnel)
-
-```bash
-# Installer les dépendances ML
-uv sync --extra ml
-
-# Lancer l'entraînement YOLOv11
-uv run python ml/train.py
-```
-
-## Endpoints API
-
-### Analyse d'image
-- **POST** `/api/analyze` - Upload d'une image PCB pour détection YOLO
-  - Input: Fichier image (multipart/form-data)
-  - Output: Liste des défauts détectés avec bounding boxes et scores
-
-### Diagnostic IA
-- **POST** `/api/diagnose` - Diagnostic détaillé par Claude AI
-  - Input: Liste de défauts détectés
-  - Output: Analyse textuelle et recommandations
-
-### Health Check
-- **GET** `/health` - Vérification de l'état de l'API
-  - Output: Status et présence du modèle YOLO
-
-### Documentation interactive
-- **GET** `/docs` - Interface Swagger UI
-- **GET** `/redoc` - Documentation ReDoc
-
-## Workflow
-
-1. **Upload** : L'utilisateur upload une image PCB via le frontend
-2. **Détection** : L'API utilise YOLOv11 pour détecter les défauts
-3. **Annotation** : Le frontend affiche les détections avec bounding boxes
-4. **Diagnostic** : Claude AI analyse les défauts et génère un rapport
-5. **Export** : Génération d'un rapport PDF avec les résultats
+MIT
