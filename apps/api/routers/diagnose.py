@@ -74,7 +74,10 @@ async def diagnose_defects(request: DiagnoseRequest):
     difficulty_map = {"open": 4, "short": 3, "mousebite": 2, "spur": 2, "copper": 3, "pin-hole": 1}
     difficulty = difficulty_map.get(defect_type, 3)
 
-    cost_map = {"open": "15-30€", "short": "10-25€", "mousebite": "5-15€", "spur": "5-10€", "copper": "10-20€", "pin-hole": "5-10€"}
+    cost_map = {
+        "open": "15-30€", "short": "10-25€", "mousebite": "5-15€",
+        "spur": "5-10€", "copper": "10-20€", "pin-hole": "5-10€",
+    }
     estimated_cost = cost_map.get(defect_type, "10-20€")
 
     # Construire les étapes de réparation par défaut
@@ -120,9 +123,10 @@ Réponds UNIQUEMENT avec les 5 étapes, une par ligne, sans numérotation."""
     except Exception:
         pass  # Fallback sur les étapes par défaut
 
+    bbox = main_defect.get("bbox", [0, 0, 0, 0])
     return DiagnoseResponse(
         repair_sheet=RepairSheetModel(
-            component=f"PCB Zone ({main_defect.get('bbox', [0,0,0,0])[0]:.0f}, {main_defect.get('bbox', [0,0,0,0])[1]:.0f})",
+            component=f"PCB Zone ({bbox[0]:.0f}, {bbox[1]:.0f})",
             defect_type=defect_type,
             severity=severity,
             steps=default_steps,
