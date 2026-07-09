@@ -2,7 +2,16 @@
 ml/data/
 ml/datasets/
 ml/runs/
+runs/
 apps/api/models/*.pt
+*.pt
+
+# TypeScript build artifacts
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Scraping scripts (dev only)
+apps/scraping/
 
 # Node
 node_modules/

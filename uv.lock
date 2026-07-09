@@ -1045,6 +1045,7 @@ dependencies = [
     { name = "pillow" },
     { name = "python-multipart" },
     { name = "pyyaml" },
+    { name = "requests" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -1073,6 +1074,7 @@ requires-dist = [
     { name = "python-multipart", specifier = ">=0.0.18" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "pyyaml", marker = "extra == 'ml'", specifier = ">=6.0" },
+    { name = "requests", specifier = ">=2.33.1" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8.0" },
     { name = "torch", marker = "extra == 'ml'", specifier = ">=2.11.0" },
     { name = "ultralytics", marker = "extra == 'ml'", specifier = ">=8.3.0" },

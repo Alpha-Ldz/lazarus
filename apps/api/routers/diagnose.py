@@ -2,10 +2,11 @@
 Router pour le diagnostic PCB avec LLM configurable.
 """
 
-import os
-
+import litellm
 from fastapi import APIRouter
 from pydantic import BaseModel
+
+from ..config import get_config
 
 router = APIRouter()
 
@@ -42,9 +43,8 @@ class DiagnoseResponse(BaseModel):
 @router.post("/", response_model=DiagnoseResponse)
 async def diagnose_defects(request: DiagnoseRequest):
     """
-    Génère un diagnostic détaillé des défauts PCB avec Claude.
+    Génère un diagnostic détaillé des défauts PCB via LLM (Ollama/Qwen par défaut).
     """
-    api_key = os.getenv("ANTHROPIC_API_KEY")
     defects = request.get_defects()
 
     if not defects:
@@ -86,36 +86,39 @@ async def diagnose_defects(request: DiagnoseRequest):
         "Vérifier la continuité électrique après réparation",
     ]
 
-    # Si Claude est disponible, enrichir le diagnostic
-    if api_key:
-        try:
-            import anthropic
+    # Utiliser LiteLLM avec la config (Ollama/Qwen par défaut)
+    try:
+        config = get_config()
+        defects_summary = "\n".join(
+            f"- {d.get('class_name', 'unknown')}: confiance {d.get('confidence', 0):.1%}"
+            for d in defects
+        )
+        context_text = f"\nContexte: {request.context}" if request.context else ""
 
-            client = anthropic.Anthropic(api_key=api_key)
-            defects_summary = "\n".join(
-                f"- {d.get('class_name', 'unknown')}: confiance {d.get('confidence', 0):.1%}"
-                for d in defects
-            )
-            context_text = f"\nContexte: {request.context}" if request.context else ""
-
-            prompt = f"""Défauts PCB détectés:
+        prompt = f"""Défauts PCB détectés:
 {defects_summary}{context_text}
 
 Donne exactement 5 étapes de réparation concrètes et courtes (une phrase chacune).
 Réponds UNIQUEMENT avec les 5 étapes, une par ligne, sans numérotation."""
 
-            message = client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=512,
-                messages=[{"role": "user", "content": prompt}],
-            )
+        llm_params = {
+            "model": config["model"],
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": config["temperature"],
+            "max_tokens": config["max_tokens"],
+        }
+        if config.get("api_key"):
+            llm_params["api_key"] = config["api_key"]
+        if config.get("base_url"):
+            llm_params["base_url"] = config["base_url"]
 
-            steps_text = message.content[0].text.strip()
-            steps = [s.strip() for s in steps_text.split("\n") if s.strip()]
-            if len(steps) >= 3:
-                default_steps = steps[:5]
-        except Exception:
-            pass  # Fallback sur les étapes par défaut
+        response = await litellm.acompletion(**llm_params)
+        steps_text = response.choices[0].message.content.strip()
+        steps = [s.strip() for s in steps_text.split("\n") if s.strip()]
+        if len(steps) >= 3:
+            default_steps = steps[:5]
+    except Exception:
+        pass  # Fallback sur les étapes par défaut
 
     return DiagnoseResponse(
         repair_sheet=RepairSheetModel(
