@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
     else:
         app.state.yolo_model = None
         print(f"⚠️ Modèle non trouvé: {MODEL_PATH}")
-        print("   Créez un symlink ou copiez le modèle depuis ml/runs/detect/deeppcb_yolo11/weights/best.pt")
+        print("   Créez un symlink ou copiez le modèle depuis ml/runs/detect/dspcbsd_yolo11/weights/best.pt")
 
     yield
 
