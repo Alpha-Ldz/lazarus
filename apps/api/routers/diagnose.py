@@ -130,7 +130,10 @@ Réponds UNIQUEMENT avec les 5 étapes, une par ligne, sans numérotation."""
 
     return DiagnoseResponse(
         repair_sheet=RepairSheetModel(
-            component=f"PCB Zone ({main_defect.get('bbox', [0,0,0,0])[0]:.0f}, {main_defect.get('bbox', [0,0,0,0])[1]:.0f})",
+            component=(
+                f"PCB Zone ({main_defect.get('bbox', [0,0,0,0])[0]:.0f},"
+                f" {main_defect.get('bbox', [0,0,0,0])[1]:.0f})"
+            ),
             defect_type=defect_type,
             severity=severity,
             steps=default_steps,
