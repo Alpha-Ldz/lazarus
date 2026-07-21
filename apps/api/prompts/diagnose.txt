@@ -4,11 +4,23 @@ CRITICAL: You must respond ONLY with valid JSON. No markdown formatting, no code
 
 The JSON object MUST contain exactly these fields:
 - component (string): Name or zone of the affected component
-- defect_type (string): Main defect type (e.g., "short", "open", "mousebite", "spur", "copper", "pin-hole")
+- defect_type (string): Main defect type — one of: "short", "open", "mousebite", "spur", "spurious_copper", "hole_breakout", "conductor_scratch", "conductor_foreign_object", "base_material_foreign_object"
 - severity (string): Must be exactly one of: "low", "medium", "high"
 - steps (array of strings): List of specific repair steps in order
 - estimated_cost (string): Part cost estimate (e.g., "< €2", "€5-€10")
 - difficulty (integer): Repair difficulty from 1 (trivial) to 5 (expert-level)
 
+Defect class descriptions:
+- short: Unintended electrical connection between conductors
+- open: Broken conductor trace preventing current flow
+- mousebite: Small notches or bites on the board edge
+- spur: Unwanted copper protrusion from a conductor
+- spurious_copper: Residual copper remaining after etching
+- hole_breakout: Drill hole that has broken through the pad boundary
+- conductor_scratch: Physical scratch on a copper conductor
+- conductor_foreign_object: Foreign particle contaminating a conductor
+- base_material_foreign_object: Foreign particle embedded in the PCB substrate
+
 Example response format:
 {"component": "Short-circuit zone", "defect_type": "short", "severity": "high", "steps": ["Identify the short location", "Clean the affected area", "Re-solder if necessary"], "estimated_cost": "< €2", "difficulty": 2}
+{"component": "Drill zone row 3", "defect_type": "hole_breakout", "severity": "high", "steps": ["Locate affected via", "Assess pad integrity", "Apply conductive epoxy", "Re-drill if needed", "Verify continuity"], "estimated_cost": "20-40€", "difficulty": 4}
