@@ -46,7 +46,7 @@ def train_yolo(
         batch: Taille du batch (16 pour RTX 5090 32GB)
         model_size: Taille du modèle YOLO (n/s/m/l/x)
         resume: Reprendre un entraînement interrompu
-        pretrained: Chemin vers un .pt pour fine-tuning (ex: DeepPCB best.pt)
+        pretrained: Chemin vers un .pt pour fine-tuning (ex: best.pt)
     """
     if not DATASET_YAML.exists():
         raise FileNotFoundError(
