@@ -9,6 +9,20 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
+HIGH_SEVERITY = {"open", "short", "hole_breakout", "base_material_foreign_object"}
+
+difficulty_map = {
+    "short": 3, "spur": 2, "spurious_copper": 3, "open": 4, "mousebite": 2,
+    "hole_breakout": 4, "conductor_scratch": 2,
+    "conductor_foreign_object": 3, "base_material_foreign_object": 4,
+}
+
+cost_map = {
+    "short": "10-25€", "spur": "5-10€", "spurious_copper": "10-20€", "open": "15-30€",
+    "mousebite": "5-15€", "hole_breakout": "20-40€", "conductor_scratch": "5-15€",
+    "conductor_foreign_object": "10-20€", "base_material_foreign_object": "20-40€",
+}
+
 
 class DiagnoseRequest(BaseModel):
     """Requête de diagnostic."""
@@ -65,16 +79,13 @@ async def diagnose_defects(request: DiagnoseRequest):
 
     # Déterminer la sévérité
     severity = "medium"
-    if defect_type in ("open", "short"):
+    if defect_type in HIGH_SEVERITY:
         severity = "high"
     if len(defects) > 5:
         severity = "high"
 
     # Déterminer la difficulté et le coût estimé
-    difficulty_map = {"open": 4, "short": 3, "mousebite": 2, "spur": 2, "copper": 3, "pin-hole": 1}
     difficulty = difficulty_map.get(defect_type, 3)
-
-    cost_map = {"open": "15-30€", "short": "10-25€", "mousebite": "5-15€", "spur": "5-10€", "copper": "10-20€", "pin-hole": "5-10€"}
     estimated_cost = cost_map.get(defect_type, "10-20€")
 
     # Construire les étapes de réparation par défaut
