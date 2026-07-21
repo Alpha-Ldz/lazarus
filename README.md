@@ -15,7 +15,7 @@ lazarus/
 │   └── web/          # Frontend React + TypeScript
 │       └── src/      # Composants React
 ├── ml/               # Pipeline ML
-│   ├── data/         # Dataset DeepPCB
+│   ├── data/         # Dataset DsPCBSD+
 │   ├── datasets/     # Datasets YOLO formatés
 │   ├── runs/         # Résultats d'entraînement
 │   ├── notebooks/    # Notebooks Jupyter
@@ -45,7 +45,8 @@ lazarus/
 - YOLOv11 (Ultralytics)
 - PyTorch 2.11+
 - OpenCV pour le traitement d'images
-- Dataset DeepPCB (6 classes de défauts : open, short, mousebite, spur, copper, pin-hole)
+- Dataset DsPCBSD+ (10 259 images réelles, 9 classes, CC BY 4.0) — [DOI: 10.1038/s41597-024-03656-8](https://doi.org/10.1038/s41597-024-03656-8)
+  - Classes : short, spur, spurious_copper, open, mousebite, hole_breakout, conductor_scratch, conductor_foreign_object, base_material_foreign_object
 
 ### Gestion des dépendances
 
@@ -61,7 +62,7 @@ lazarus/
 uv sync
 
 # Créer le symlink vers le modèle YOLO entraîné
-ln -s ../../../ml/runs/detect/deeppcb_yolo11/weights/best.pt apps/api/models/best.pt
+ln -s ../../../ml/runs/detect/dspcbsd_yolo11/weights/best.pt apps/api/models/best.pt
 
 # Démarrer le serveur API
 uv run uvicorn apps.api.main:app --reload
@@ -90,9 +91,18 @@ Le frontend sera disponible sur `http://localhost:5173`
 # Installer les dépendances ML
 uv sync --extra ml
 
+# Télécharger le dataset DsPCBSD+
+uv run python ml/download_dspcbsd.py
+
 # Lancer l'entraînement YOLOv11
-uv run python ml/train.py
+uv run python ml/train_dspcbsd.py
 ```
+
+### Modèles supportés (à venir)
+
+- YOLOv11 (détection en temps réel)
+- RT-DETR (détection haute précision)
+- PatchCore (détection d'anomalies sans supervision)
 
 ## Endpoints API
 
