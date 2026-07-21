@@ -17,21 +17,24 @@ MODEL_PATH = Path(__file__).parent / "models" / "best.pt"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Gestion du cycle de vie de l'application."""
-    # Startup: charger le modèle
-    from ultralytics import YOLO
+    from .detectors.factory import build_detector
 
     if MODEL_PATH.exists():
-        app.state.yolo_model = YOLO(str(MODEL_PATH))
-        print(f"✅ Modèle YOLO chargé: {MODEL_PATH}")
+        try:
+            app.state.detector = build_detector()
+            print(f"✅ Détecteur chargé: {app.state.detector.name}")
+        except Exception as exc:
+            app.state.detector = None
+            print(f"⚠️ Échec du chargement du détecteur: {exc}")
     else:
-        app.state.yolo_model = None
+        app.state.detector = None
         print(f"⚠️ Modèle non trouvé: {MODEL_PATH}")
         print("   Créez un symlink ou copiez le modèle depuis ml/runs/detect/dspcbsd_yolo11/weights/best.pt")
 
     yield
 
     # Shutdown: cleanup si nécessaire
-    app.state.yolo_model = None
+    app.state.detector = None
 
 
 app = FastAPI(
@@ -68,4 +71,9 @@ async def root():
 @app.get("/health")
 async def health():
     """Health check endpoint."""
-    return {"status": "healthy", "model_loaded": app.state.yolo_model is not None}
+    detector = app.state.detector
+    return {
+        "status": "healthy",
+        "detector_loaded": detector is not None,
+        "detector_name": detector.name if detector is not None else None,
+    }

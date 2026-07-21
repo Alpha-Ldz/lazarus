@@ -1,5 +1,5 @@
 """
-Router pour l'analyse d'images PCB avec YOLO.
+Router pour l'analyse d'images PCB.
 """
 
 import base64
@@ -10,30 +10,10 @@ from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 from PIL import Image
 from pydantic import BaseModel
 
+from ..detectors.annotate import draw_detections
+from ..detectors.base import Detection
+
 router = APIRouter()
-
-# Classes DsPCBSD+ (9 catégories de défauts PCB industriels)
-# Ref: https://doi.org/10.1038/s41597-024-03656-8
-CLASSES = [
-    "short",                         # 0 - Court-circuit
-    "spur",                          # 1 - Excroissance
-    "spurious_copper",               # 2 - Cuivre parasite
-    "open",                          # 3 - Circuit ouvert
-    "mousebite",                     # 4 - Morsure de souris
-    "hole_breakout",                 # 5 - Débordement de perçage
-    "conductor_scratch",             # 6 - Rayure conducteur
-    "conductor_foreign_object",      # 7 - Corps étranger sur conducteur
-    "base_material_foreign_object",  # 8 - Corps étranger sur substrat
-]
-
-
-class Detection(BaseModel):
-    """Représente une détection de défaut."""
-
-    class_id: int
-    class_name: str
-    confidence: float
-    bbox: list[float]  # [x1, y1, x2, y2]
 
 
 class AnalyzeResponse(BaseModel):
@@ -56,10 +36,10 @@ async def analyze_image(
     - **file**: Image PCB (JPEG, PNG)
     - **return_image**: Si True, retourne l'image annotée en base64
     """
-    model = request.app.state.yolo_model
+    detector = request.app.state.detector
 
-    if model is None:
-        raise HTTPException(status_code=503, detail="Modèle YOLO non chargé")
+    if detector is None:
+        raise HTTPException(status_code=503, detail="Détecteur non chargé")
 
     # Vérifier le type de fichier
     if file.content_type not in ["image/jpeg", "image/png"]:
@@ -69,42 +49,28 @@ async def analyze_image(
     contents = await file.read()
     image = Image.open(io.BytesIO(contents))
 
-    # Effectuer l'inférence
-    results = model(image, verbose=False)
-
-    detections = []
-    for r in results:
-        for box in r.boxes:
-            cls_id = int(box.cls[0])
-            detections.append(
-                Detection(
-                    class_id=cls_id,
-                    class_name=CLASSES[cls_id],
-                    confidence=float(box.conf[0]),
-                    bbox=box.xyxy[0].tolist(),
-                )
-            )
+    # Effectuer l'inférence via l'interface Detector
+    result = detector.predict(image)
 
     # Générer l'image annotée si demandé
     image_annotated = None
-    if return_image and results:
-        # Obtenir l'image avec les annotations
-        annotated = results[0].plot()
-
-        # Convertir en base64
-        img = Image.fromarray(annotated[..., ::-1])  # BGR to RGB
+    if return_image:
+        annotated = draw_detections(image, result.detections)
         buffer = io.BytesIO()
-        img.save(buffer, format="JPEG", quality=85)
+        annotated.save(buffer, format="JPEG", quality=85)
         image_annotated = base64.b64encode(buffer.getvalue()).decode()
 
     return AnalyzeResponse(
         success=True,
-        detections=detections,
+        detections=result.detections,
         image_annotated=image_annotated,
     )
 
 
 @router.get("/classes")
-async def get_classes():
+async def get_classes(request: Request):
     """Retourne la liste des classes de défauts."""
-    return {"classes": CLASSES}
+    detector = request.app.state.detector
+    if detector is None:
+        raise HTTPException(status_code=503, detail="Détecteur non chargé")
+    return {"classes": detector.class_names}
