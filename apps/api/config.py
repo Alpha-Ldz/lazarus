@@ -3,9 +3,10 @@ Configuration reader for the LLM provider in the diagnose endpoint.
 Loads config.yaml, resolves environment variable placeholders, and validates required fields.
 """
 
-import yaml
 import os
 from pathlib import Path
+
+import yaml
 
 CONFIG_PATH = Path(__file__).parent / "config.yaml"
 REQUIRED_FIELDS = {"provider", "model", "api_key", "temperature", "max_tokens"}
