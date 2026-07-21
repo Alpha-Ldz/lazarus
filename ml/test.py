@@ -11,7 +11,7 @@ from ultralytics import YOLO
 ML_DIR = Path(__file__).parent
 DEFAULT_MODEL = ML_DIR / "runs" / "detect" / "dspcbsd_yolo11" / "weights" / "best.pt"
 DEFAULT_DATA = ML_DIR / "datasets" / "dspcbsd" / "dspcbsd.yaml"
-SAMPLE_IMAGE = ML_DIR / "data" / "DeepPCB" / "PCBData" / "group00041" / "00041" / "00041000_test.jpg"
+SAMPLE_IMAGE = ML_DIR / "datasets" / "dspcbsd" / "images" / "val"
 
 CLASSES = [
     "short", "spur", "spurious_copper", "open", "mousebite",
