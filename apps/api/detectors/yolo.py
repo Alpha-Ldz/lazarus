@@ -21,21 +21,21 @@ _DSPCBSD_CLASSES = [
 ]
 
 
-class YoloDetector:
-    """Détecteur basé sur Ultralytics YOLO."""
+class _UltralyticsDetector:
+    """Base commune pour les détecteurs Ultralytics (YOLO, RT-DETR…)."""
 
-    def __init__(self, model_path: str | Path) -> None:
-        from ultralytics import YOLO
+    name: str
+    _model: object
+    _class_names: list[str]
 
-        self._model = YOLO(str(model_path))
-        self.name: str = f"yolo-{Path(model_path).stem}"
-        # Récupère les noms de classes depuis le modèle si disponibles
+    def _init_class_names(self, fallback: list[str]) -> None:
+        """Initialise _class_names depuis model.names ou utilise le fallback."""
         if hasattr(self._model, "names") and self._model.names:
-            self._class_names: list[str] = [
+            self._class_names = [
                 self._model.names[i] for i in sorted(self._model.names)
             ]
         else:
-            self._class_names = _DSPCBSD_CLASSES
+            self._class_names = fallback
 
     @property
     def class_names(self) -> list[str]:
@@ -61,3 +61,14 @@ class YoloDetector:
                     )
                 )
         return DetectionResult(detections=detections)
+
+
+class YoloDetector(_UltralyticsDetector):
+    """Détecteur basé sur Ultralytics YOLO."""
+
+    def __init__(self, model_path: str | Path) -> None:
+        from ultralytics import YOLO
+
+        self._model = YOLO(str(model_path))
+        self.name: str = f"yolo-{Path(model_path).stem}"
+        self._init_class_names(_DSPCBSD_CLASSES)

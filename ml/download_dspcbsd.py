@@ -10,10 +10,8 @@ Paper: https://doi.org/10.1038/s41597-024-03656-8
 Licence: CC BY 4.0
 """
 
-import hashlib
 import zipfile
 from pathlib import Path
-from urllib.request import urlretrieve
 
 ML_DIR = Path(__file__).parent
 DATA_DIR = ML_DIR / "data" / "DsPCBSD+"
@@ -35,13 +33,13 @@ def download_dataset():
     if zip_path.exists() and zip_path.stat().st_size > 1024:
         print(f"✅ Archive déjà présente : {zip_path}")
     else:
-        print(f"⚠️  Téléchargement manuel requis:")
+        print("⚠️  Téléchargement manuel requis:")
         print(f"   1. Visitez : {FIGSHARE_PAGE}")
-        print(f"   2. Téléchargez le fichier ZIP du dataset")
+        print("   2. Téléchargez le fichier ZIP du dataset")
         print(f"   3. Placez-le dans : {zip_path}")
-        print(f"   4. Relancez ce script")
+        print("   4. Relancez ce script")
         print()
-        print(f"   Ou utilisez wget/curl avec l'URL directe du fichier sur Figshare")
+        print("   Ou utilisez wget/curl avec l'URL directe du fichier sur Figshare")
         import sys
         sys.exit(1)
 
@@ -135,10 +133,10 @@ def verify_dataset():
         if orphan_imgs:
             print(f"   ⚠️  {split}: {len(orphan_imgs)} images sans labels")
 
-    print(f"\n📊 Dataset prêt:")
+    print("\n📊 Dataset prêt:")
     print(f"   Total images: {total_images}")
     print(f"   Total labels: {total_labels}")
-    print(f"   Attendu: ~10 259 images, ~10 259 labels")
+    print("   Attendu: ~10 259 images, ~10 259 labels")
 
     if total_images < 9000:
         print("   ⚠️  Nombre d'images inférieur à l'attendu — vérifiez l'extraction")
@@ -156,8 +154,8 @@ def main():
     create_symlinks(yolo_dir)
     verify_dataset()
 
-    print(f"\n🎯 Pour lancer l'entraînement :")
-    print(f"   python ml/train_dspcbsd.py")
+    print("\n🎯 Pour lancer l'entraînement :")
+    print("   python ml/train_dspcbsd.py")
 
 
 if __name__ == "__main__":

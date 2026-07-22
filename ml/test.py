@@ -59,10 +59,11 @@ def predict_single(model_path: Path, image_path: Path, save: bool = True, show: 
             cls_id = int(box.cls[0])
             conf = float(box.conf[0])
             xyxy = box.xyxy[0].tolist()
-            print(f"  - {CLASSES[cls_id]:12s} (conf: {conf:.2f}) @ [{xyxy[0]:.0f}, {xyxy[1]:.0f}, {xyxy[2]:.0f}, {xyxy[3]:.0f}]")
+            bbox = f"[{xyxy[0]:.0f}, {xyxy[1]:.0f}, {xyxy[2]:.0f}, {xyxy[3]:.0f}]"
+            print(f"  - {CLASSES[cls_id]:12s} (conf: {conf:.2f}) @ {bbox}")
 
     if save:
-        print(f"\n💾 Résultat sauvegardé dans: runs/detect/predict/")
+        print("\n💾 Résultat sauvegardé dans: runs/detect/predict/")
 
     return results
 
@@ -93,14 +94,14 @@ def predict_batch(model_path: Path, source_dir: Path, save: bool = True):
             class_counts[CLASSES[cls_id]] += 1
             total_detections += 1
 
-    print(f"\n📊 Statistiques:")
+    print("\n📊 Statistiques:")
     print(f"  Total détections: {total_detections}")
-    print(f"\n  Par classe:")
+    print("\n  Par classe:")
     for cls_name, count in class_counts.items():
         print(f"    {cls_name:12s}: {count}")
 
     if save:
-        print(f"\n💾 Résultats sauvegardés dans: runs/detect/predict/")
+        print("\n💾 Résultats sauvegardés dans: runs/detect/predict/")
 
 
 def export_model(model_path: Path, format: str = "onnx"):
