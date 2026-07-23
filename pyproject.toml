@@ -23,6 +23,7 @@ ml = [
     "pyyaml>=6.0",
     "onnx>=1.22.0",
     "onnxruntime-gpu>=1.27.0",
+    "anomalib>=2.5.1",
 ]
 dev = [
     "ruff>=0.8.0",

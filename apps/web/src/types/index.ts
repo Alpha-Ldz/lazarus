@@ -8,6 +8,7 @@ export type DefectClass =
   | "conductor_scratch"
   | "conductor_foreign_object"
   | "base_material_foreign_object"
+  | "anomaly"
 
 export interface Detection {
   class_id: number
@@ -45,6 +46,7 @@ export const DEFECT_COLORS: Record<DefectClass, string> = {
   conductor_scratch: "#14b8a6",
   conductor_foreign_object: "#f59e0b",
   base_material_foreign_object: "#6b7280",
+  anomaly: "#dc2626",
 }
 
 export const DEFECT_LABELS: Record<DefectClass, string> = {
@@ -57,4 +59,5 @@ export const DEFECT_LABELS: Record<DefectClass, string> = {
   conductor_scratch: "Conductor Scratch",
   conductor_foreign_object: "Conductor Foreign Object",
   base_material_foreign_object: "Base Material Foreign Object",
+  anomaly: "Anomaly",
 }
