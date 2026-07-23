@@ -1,0 +1,243 @@
+{
+  "meta": {
+    "date": "2026-07-23T09:10:52.264034+00:00",
+    "git_commit": "3d39702f3a160bff2f2854fa93d4b9775e3ebbbd",
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "torch": "2.11.0+cu130",
+    "ultralytics": "8.4.33",
+    "cuda": "13.0",
+    "eval_split": "val",
+    "imgsz": 640,
+    "conf_threshold": 0.25,
+    "iou_threshold": 0.5,
+    "training_manifest": "ml/runs/training_manifest.json"
+  },
+  "models": [
+    {
+      "name": "yolo11s-dspcbsd",
+      "paradigm": "supervised_detection",
+      "weights": "/home/peuleu/lazarus/ml/runs/detect/dspcbsd_yolo11_bench6/weights/best.pt",
+      "params_m": 9.5,
+      "size_mb": 18.3,
+      "detection_metrics": {
+        "map50": 0.8493,
+        "map50_95": 0.5504,
+        "precision": 0.8207,
+        "recall": 0.8151,
+        "per_class": [
+          {
+            "class": "short",
+            "support": 169,
+            "precision": 0.8596,
+            "recall": 0.8521,
+            "map50": 0.9003,
+            "map50_95": 0.6173
+          },
+          {
+            "class": "spur",
+            "support": 929,
+            "precision": 0.8221,
+            "recall": 0.7957,
+            "map50": 0.8468,
+            "map50_95": 0.4335
+          },
+          {
+            "class": "spurious_copper",
+            "support": 285,
+            "precision": 0.78,
+            "recall": 0.8035,
+            "map50": 0.8448,
+            "map50_95": 0.5567
+          },
+          {
+            "class": "open",
+            "support": 338,
+            "precision": 0.829,
+            "recall": 0.8757,
+            "map50": 0.8966,
+            "map50_95": 0.5857
+          },
+          {
+            "class": "mousebite",
+            "support": 546,
+            "precision": 0.8392,
+            "recall": 0.7802,
+            "map50": 0.8143,
+            "map50_95": 0.4355
+          },
+          {
+            "class": "hole_breakout",
+            "support": 608,
+            "precision": 0.9387,
+            "recall": 0.9507,
+            "map50": 0.9751,
+            "map50_95": 0.8427
+          },
+          {
+            "class": "conductor_scratch",
+            "support": 448,
+            "precision": 0.7489,
+            "recall": 0.7324,
+            "map50": 0.7714,
+            "map50_95": 0.5242
+          },
+          {
+            "class": "conductor_foreign_object",
+            "support": 423,
+            "precision": 0.7366,
+            "recall": 0.661,
+            "map50": 0.7071,
+            "map50_95": 0.443
+          },
+          {
+            "class": "base_material_foreign_object",
+            "support": 346,
+            "precision": 0.8325,
+            "recall": 0.8844,
+            "map50": 0.8874,
+            "map50_95": 0.5155
+          }
+        ]
+      },
+      "anomaly_metrics": null,
+      "latency": {
+        "backend": "pytorch",
+        "p50_ms": 33.22,
+        "p95_ms": 33.7,
+        "p99_ms": 34.346,
+        "mean_ms": 33.271,
+        "std_ms": 0.268,
+        "breakdown_ms": {
+          "preprocess": 0.485,
+          "inference": 31.065,
+          "postprocess": 0.204
+        },
+        "throughput_img_s": 30.1,
+        "batch_size": 1,
+        "warmup_iters": 50,
+        "measured_iters": 200
+      },
+      "latency_exported": [
+        {
+          "backend": "onnxruntime_gpu",
+          "p50_ms": 27.494,
+          "mean_ms": 27.747,
+          "throughput_img_s": 36.0
+        }
+      ]
+    },
+    {
+      "name": "rtdetr-l-dspcbsd",
+      "paradigm": "supervised_detection",
+      "weights": "/home/peuleu/lazarus/ml/runs/detect/dspcbsd_rtdetr_bench5/weights/best.pt",
+      "params_m": 33.0,
+      "size_mb": 63.2,
+      "detection_metrics": {
+        "map50": 0.8179,
+        "map50_95": 0.5225,
+        "precision": 0.8317,
+        "recall": 0.7777,
+        "per_class": [
+          {
+            "class": "short",
+            "support": 169,
+            "precision": 0.8049,
+            "recall": 0.8166,
+            "map50": 0.8287,
+            "map50_95": 0.5583
+          },
+          {
+            "class": "spur",
+            "support": 929,
+            "precision": 0.8403,
+            "recall": 0.7427,
+            "map50": 0.8271,
+            "map50_95": 0.4175
+          },
+          {
+            "class": "spurious_copper",
+            "support": 285,
+            "precision": 0.8291,
+            "recall": 0.786,
+            "map50": 0.8157,
+            "map50_95": 0.5547
+          },
+          {
+            "class": "open",
+            "support": 338,
+            "precision": 0.8434,
+            "recall": 0.8432,
+            "map50": 0.8656,
+            "map50_95": 0.5504
+          },
+          {
+            "class": "mousebite",
+            "support": 546,
+            "precision": 0.8677,
+            "recall": 0.7564,
+            "map50": 0.8284,
+            "map50_95": 0.4458
+          },
+          {
+            "class": "hole_breakout",
+            "support": 608,
+            "precision": 0.8715,
+            "recall": 0.9595,
+            "map50": 0.9697,
+            "map50_95": 0.8277
+          },
+          {
+            "class": "conductor_scratch",
+            "support": 448,
+            "precision": 0.7765,
+            "recall": 0.596,
+            "map50": 0.6613,
+            "map50_95": 0.4097
+          },
+          {
+            "class": "conductor_foreign_object",
+            "support": 423,
+            "precision": 0.7811,
+            "recall": 0.6288,
+            "map50": 0.6945,
+            "map50_95": 0.4401
+          },
+          {
+            "class": "base_material_foreign_object",
+            "support": 346,
+            "precision": 0.8706,
+            "recall": 0.8699,
+            "map50": 0.8701,
+            "map50_95": 0.4984
+          }
+        ]
+      },
+      "anomaly_metrics": null,
+      "latency": {
+        "backend": "pytorch",
+        "p50_ms": 133.035,
+        "p95_ms": 134.032,
+        "p99_ms": 134.869,
+        "mean_ms": 133.048,
+        "std_ms": 0.546,
+        "breakdown_ms": {
+          "preprocess": 0.453,
+          "inference": 130.931,
+          "postprocess": 0.166
+        },
+        "throughput_img_s": 7.5,
+        "batch_size": 1,
+        "warmup_iters": 50,
+        "measured_iters": 200
+      },
+      "latency_exported": [
+        {
+          "backend": "onnxruntime_gpu",
+          "p50_ms": 98.115,
+          "mean_ms": 98.095,
+          "throughput_img_s": 10.2
+        }
+      ]
+    }
+  ]
+}
