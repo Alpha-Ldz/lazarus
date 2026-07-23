@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from apps.api.detectors.anomaly_bbox import MIN_BLOB_AREA_RATIO, anomaly_map_to_detections
+from apps.api.detectors.anomaly_bbox import anomaly_map_to_detections
 
 
 def _blank_map(h: int, w: int) -> np.ndarray:

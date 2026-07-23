@@ -30,6 +30,13 @@ dev = [
     "pytest>=8.0.0",
 ]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "requires_weights: marks tests that need model weights (skip in CI with -m 'not requires_weights')",
+]
+addopts = "-m 'not requires_weights'"
+
 [tool.ruff]
 line-length = 120
 target-version = "py313"
