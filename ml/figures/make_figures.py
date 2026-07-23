@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -275,7 +276,8 @@ def make_three_paradigms() -> None:
         0.5,
         -0.04,
         "\u2020 PatchCore is trained on VisA PCB (different dataset). "
-        "The third panel is a synthetic illustration — direct metric comparison with the supervised models is NOT valid.",
+        "The third panel is a synthetic illustration — "
+        "direct metric comparison with the supervised models is NOT valid.",
         ha="center",
         fontsize=8,
         color="#6b7280",
