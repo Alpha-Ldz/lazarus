@@ -27,9 +27,14 @@ def build_detector() -> Detector:
             from .rtdetr import RtdetrDetector
 
             return RtdetrDetector(model_path)
+        case "patchcore":
+            from .patchcore import PatchcoreDetector
+
+            category = os.getenv("LAZARUS_PATCHCORE_CATEGORY", "pcb")
+            return PatchcoreDetector(model_path, category=category)
         case _:
             raise ValueError(
                 f"Détecteur inconnu: '{detector_type}'. "
-                "Valeurs acceptées: 'yolo', 'rtdetr'. "
+                "Valeurs acceptées: 'yolo', 'rtdetr', 'patchcore'. "
                 "Ajoutez un fichier dans apps/api/detectors/ et une entrée ici pour en ajouter un."
             )

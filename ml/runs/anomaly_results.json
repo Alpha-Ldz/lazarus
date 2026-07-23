@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "date": "2026-07-23T09:18:40.864078+00:00",
+    "git_commit": "92dc482821ef38707e5e9a1c61aebf93ac8fa3d0",
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "model": "PatchCore",
+    "dataset": "VisA",
+    "resolution": "256x256 (Anomalib default — NOT comparable to 640x640 supervised models)",
+    "paradigm": "unsupervised_anomaly_detection",
+    "categories_requested": [
+      "pcb1",
+      "pcb2",
+      "pcb3",
+      "pcb4"
+    ]
+  },
+  "categories": [
+    {
+      "category": "pcb1",
+      "status": "dry_run",
+      "metrics": {},
+      "fit_duration_s": 0,
+      "export_path": "ml/runs/patchcore/pcb1/weights/torch/model.pt",
+      "n_train_images": "N/A",
+      "n_test_images": "N/A",
+      "memory_bank_size": "N/A"
+    },
+    {
+      "category": "pcb2",
+      "status": "dry_run",
+      "metrics": {},
+      "fit_duration_s": 0,
+      "export_path": "ml/runs/patchcore/pcb2/weights/torch/model.pt",
+      "n_train_images": "N/A",
+      "n_test_images": "N/A",
+      "memory_bank_size": "N/A"
+    },
+    {
+      "category": "pcb3",
+      "status": "dry_run",
+      "metrics": {},
+      "fit_duration_s": 0,
+      "export_path": "ml/runs/patchcore/pcb3/weights/torch/model.pt",
+      "n_train_images": "N/A",
+      "n_test_images": "N/A",
+      "memory_bank_size": "N/A"
+    },
+    {
+      "category": "pcb4",
+      "status": "dry_run",
+      "metrics": {},
+      "fit_duration_s": 0,
+      "export_path": "ml/runs/patchcore/pcb4/weights/torch/model.pt",
+      "n_train_images": "N/A",
+      "n_test_images": "N/A",
+      "memory_bank_size": "N/A"
+    }
+  ]
+}

@@ -344,3 +344,89 @@ def generate_markdown(results: dict[str, Any], manifest: dict[str, Any]) -> str:
     ]
 
     return "\n".join(lines)
+
+
+def generate_anomaly_markdown(anomaly_results: dict[str, Any]) -> str:
+    """Generate a Markdown section for PatchCore/anomaly results from anomaly_results.json.
+
+    This section is deliberately separate from the supervised-detection benchmark.
+    See the non-comparability note below for the reasons.
+    """
+    lines: list[str] = []
+    meta = anomaly_results.get("meta", {})
+    categories = anomaly_results.get("categories", [])
+
+    lines += [
+        "# Anomaly Detection Benchmark — PatchCore on VisA PCB",
+        "",
+        f"Generated: {meta.get('date', 'N/A')}  ",
+        f"Git commit: `{str(meta.get('git_commit', 'N/A'))[:12]}`  ",
+        f"GPU: {meta.get('gpu', 'N/A')}",
+        "",
+    ]
+
+    # ── Anomaly metrics table ─────────────────────────────────────────────────
+    lines += [
+        "## Anomaly Metrics — PatchCore × VisA PCB (4 catégories)",
+        "",
+        "| Category | Status | AUROC Image | AUROC Pixel | AU-PRO"
+        " | Fit Duration (s) | Memory Bank Size | Train Images | Test Images |",
+        "|----------|--------|-------------|-------------|-------"
+        "|-----------------|-----------------|--------------|-------------|",
+    ]
+    for cat in categories:
+        name = cat.get("category", "?")
+        status = cat.get("status", "?")
+        if status == "failed":
+            err = cat.get("error", "")
+            lines.append(f"| {name} | **FAILED** | — | — | — | — | — | — | {err} |")
+            continue
+        metrics = cat.get("metrics", {})
+        lines.append(
+            f"| {name} | {status}"
+            f" | {metrics.get('image_auroc', 'N/A')}"
+            f" | {metrics.get('pixel_auroc', 'N/A')}"
+            f" | {metrics.get('au_pro', 'N/A')}"
+            f" | {cat.get('fit_duration_s', 'N/A')}"
+            f" | {cat.get('memory_bank_size', 'N/A')}"
+            f" | {cat.get('n_train_images', 'N/A')}"
+            f" | {cat.get('n_test_images', 'N/A')} |"
+        )
+
+    lines += [
+        "",
+        "---",
+        "",
+        "## Non-Comparabilité avec le Benchmark Supervisé",
+        "",
+        "> **Ces résultats NE sont PAS comparables** aux métriques mAP/P/R du benchmark supervisé",
+        "> (YOLOv11s / RT-DETR-l sur DsPCBSD+). Les raisons sont multiples et structurelles :",
+        "",
+        "| Axe | Supervisé (YOLO / RT-DETR) | Non-supervisé (PatchCore) |",
+        "|-----|---------------------------|--------------------------|",
+        "| **Dataset** | DsPCBSD+ (9 classes, boîtes annotées) | VisA PCB (sain/anormal, pas de boîtes) |",
+        "| **Métriques** | mAP50, mAP50-95, Precision, Recall | AUROC image, AUROC pixel, AU-PRO |",
+        "| **Résolution** | 640×640 | 256×256 (défaut Anomalib) |",
+        "| **Supervision** | Milliers de boîtes annotées par classe | Uniquement images saines (0 annotation défaut) |",
+        "| **Latence** | Non comparable (résolutions différentes) | Non comparable (résolutions différentes) |",
+        "",
+        "**Aucun ratio entre mAP et AUROC n'a de sens.** Ne pas tenter d'agréger ces colonnes.",
+        "",
+        "### Ce qui EST légitimement comparable",
+        "",
+        "- **Coût d'annotation** : YOLO/RT-DETR nécessitent des milliers de boîtes annotées ;",
+        "  PatchCore n'a besoin que d'images saines — coût quasi nul.",
+        "- **Coût d'entraînement** : PatchCore (banque mémoire, pas de backprop) se fit en quelques",
+        "  minutes par catégorie vs plusieurs heures pour les modèles supervisés.",
+        "- **Capacité de localisation** : qualitativement, via les cartes de chaleur exportées.",
+        "  Les bounding boxes PatchCore sont des approximations (composantes connexes du masque seuillé).",
+        "",
+        "### Note sur le prompt `diagnose.txt`",
+        "",
+        "> Avec PatchCore, le champ `defect_type` vaut `\"anomaly\"` — le LLM produira une fiche",
+        "> générique. Ce n'est pas un bug bloquant, mais le prochain ticket logique est d'adapter",
+        "> le diagnostic au paradigme anomalie. Non traité ici.",
+        "",
+    ]
+
+    return "\n".join(lines)
