@@ -122,6 +122,7 @@ interface RepairSheet {
 - Branch format: `<type>/plland/<kebab-case-name>`
 - Commit format: `<type>(<scope>): <description>` — Refs #<issue>
 - Types: feat, fix, docs, refactor, test, chore
+- **Commit messages are written in English** (conventional commits, English only)
 
 ## Anti-patterns — DO NOT
 
