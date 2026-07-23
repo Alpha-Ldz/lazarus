@@ -45,3 +45,7 @@ jobs:
       - name: Type-check
         working-directory: apps/web
         run: npx tsc --noEmit
+
+      - name: Test
+        working-directory: apps/web
+        run: npm test
