@@ -1,0 +1,245 @@
+{
+  "benchmark_id": "lazarus-bench-20260722T232600",
+  "generated_at": "2026-07-22T23:26:00.223518+00:00",
+  "git_commit": "7f43704048e1fac4bf6a8542b62d35c593c797ff",
+  "training_mode": "sequential",
+  "environment": {
+    "ultralytics": "8.4.33",
+    "torch": "2.11.0+cu130",
+    "cuda_version": "13.0",
+    "gpu_name": "NVIDIA GeForce RTX 5090",
+    "gpu_vram_gb": "33.7",
+    "python": "3.13.12"
+  },
+  "dataset": {
+    "yaml_path": "/home/peuleu/lazarus/ml/datasets/dspcbsd/dspcbsd.yaml",
+    "yaml_sha256": "9413102aa1f0f1448429babf7647ebdfb3250b8d217ba7895a07db4c7b2638da",
+    "splits": {
+      "train": {
+        "images": 8208,
+        "instances": 16184,
+        "per_class": {
+          "short": 746,
+          "spur": 3655,
+          "spurious_copper": 1308,
+          "open": 1432,
+          "mousebite": 1983,
+          "hole_breakout": 2275,
+          "conductor_scratch": 2042,
+          "conductor_foreign_object": 1409,
+          "base_material_foreign_object": 1334
+        }
+      },
+      "val": {
+        "images": 2051,
+        "instances": 4092,
+        "per_class": {
+          "short": 169,
+          "spur": 929,
+          "spurious_copper": 285,
+          "open": 338,
+          "mousebite": 546,
+          "hole_breakout": 608,
+          "conductor_scratch": 448,
+          "conductor_foreign_object": 423,
+          "base_material_foreign_object": 346
+        }
+      }
+    }
+  },
+  "shared_hyperparams": {
+    "data": "/home/peuleu/lazarus/ml/datasets/dspcbsd/dspcbsd.yaml",
+    "imgsz": 640,
+    "epochs": 150,
+    "patience": 50,
+    "batch": 8,
+    "seed": 42,
+    "deterministic": false,
+    "device": "0",
+    "workers": 8,
+    "save": true,
+    "plots": true,
+    "hsv_h": 0.01,
+    "hsv_s": 0.3,
+    "hsv_v": 0.3,
+    "degrees": 0.0,
+    "translate": 0.1,
+    "scale": 0.3,
+    "fliplr": 0.5,
+    "flipud": 0.0,
+    "mosaic": 1.0,
+    "mixup": 0.1
+  },
+  "models": {
+    "yolo": {
+      "model_name": "YOLOv11s",
+      "base_weights": "yolo11s.pt",
+      "run_name": "dspcbsd_yolo11_bench",
+      "best_pt_path": "/home/peuleu/lazarus/ml/runs/detect/dspcbsd_yolo11_bench6/weights/best.pt",
+      "n_params": 9458752,
+      "train_start": "2026-07-22T18:51:47.545169+00:00",
+      "train_end": "2026-07-22T20:03:11.137928+00:00",
+      "duration_seconds": 4283.6,
+      "epochs_completed": 127,
+      "peak_vram_gb": 2.19,
+      "hyperparams_effective": {
+        "data": "/home/peuleu/lazarus/ml/datasets/dspcbsd/dspcbsd.yaml",
+        "imgsz": 640,
+        "epochs": 150,
+        "patience": 50,
+        "batch": 8,
+        "seed": 42,
+        "deterministic": false,
+        "device": "0",
+        "workers": 8,
+        "save": true,
+        "plots": true,
+        "hsv_h": 0.01,
+        "hsv_s": 0.3,
+        "hsv_v": 0.3,
+        "degrees": 0.0,
+        "translate": 0.1,
+        "scale": 0.3,
+        "fliplr": 0.5,
+        "flipud": 0.0,
+        "mosaic": 1.0,
+        "mixup": 0.1,
+        "project": "/home/peuleu/lazarus/ml/runs/detect",
+        "name": "dspcbsd_yolo11_bench"
+      },
+      "metrics": {
+        "global": {
+          "mAP50": 0.8502,
+          "mAP50-95": 0.5205,
+          "precision": 0.8199,
+          "recall": 0.8069
+        },
+        "per_class": {
+          "short": {
+            "mAP50": 0.8994,
+            "mAP50-95": 0.5838
+          },
+          "spur": {
+            "mAP50": 0.8535,
+            "mAP50-95": 0.4033
+          },
+          "spurious_copper": {
+            "mAP50": 0.8394,
+            "mAP50-95": 0.5214
+          },
+          "open": {
+            "mAP50": 0.9105,
+            "mAP50-95": 0.5611
+          },
+          "mousebite": {
+            "mAP50": 0.8219,
+            "mAP50-95": 0.4062
+          },
+          "hole_breakout": {
+            "mAP50": 0.9844,
+            "mAP50-95": 0.8432
+          },
+          "conductor_scratch": {
+            "mAP50": 0.7561,
+            "mAP50-95": 0.4749
+          },
+          "conductor_foreign_object": {
+            "mAP50": 0.6976,
+            "mAP50-95": 0.4073
+          },
+          "base_material_foreign_object": {
+            "mAP50": 0.8895,
+            "mAP50-95": 0.483
+          }
+        }
+      },
+      "status": "success",
+      "error": null
+    },
+    "rtdetr": {
+      "model_name": "RT-DETR-l",
+      "base_weights": "rtdetr-l.pt",
+      "run_name": "dspcbsd_rtdetr_bench",
+      "best_pt_path": "/home/peuleu/lazarus/ml/runs/detect/dspcbsd_rtdetr_bench5/weights/best.pt",
+      "n_params": 32970476,
+      "train_start": "2026-07-22T20:03:17.323121+00:00",
+      "train_end": "2026-07-22T23:25:49.237013+00:00",
+      "duration_seconds": 12151.9,
+      "epochs_completed": 102,
+      "peak_vram_gb": 6.66,
+      "hyperparams_effective": {
+        "data": "/home/peuleu/lazarus/ml/datasets/dspcbsd/dspcbsd.yaml",
+        "imgsz": 640,
+        "epochs": 150,
+        "patience": 50,
+        "batch": 8,
+        "seed": 42,
+        "deterministic": false,
+        "device": "0",
+        "workers": 8,
+        "save": true,
+        "plots": true,
+        "hsv_h": 0.01,
+        "hsv_s": 0.3,
+        "hsv_v": 0.3,
+        "degrees": 0.0,
+        "translate": 0.1,
+        "scale": 0.3,
+        "fliplr": 0.5,
+        "flipud": 0.0,
+        "mosaic": 1.0,
+        "mixup": 0.1,
+        "project": "/home/peuleu/lazarus/ml/runs/detect",
+        "name": "dspcbsd_rtdetr_bench"
+      },
+      "metrics": {
+        "global": {
+          "mAP50": 0.8231,
+          "mAP50-95": 0.4986,
+          "precision": 0.8304,
+          "recall": 0.8036
+        },
+        "per_class": {
+          "short": {
+            "mAP50": 0.8273,
+            "mAP50-95": 0.5321
+          },
+          "spur": {
+            "mAP50": 0.8172,
+            "mAP50-95": 0.3799
+          },
+          "spurious_copper": {
+            "mAP50": 0.7949,
+            "mAP50-95": 0.5093
+          },
+          "open": {
+            "mAP50": 0.8759,
+            "mAP50-95": 0.5247
+          },
+          "mousebite": {
+            "mAP50": 0.8196,
+            "mAP50-95": 0.4065
+          },
+          "hole_breakout": {
+            "mAP50": 0.9705,
+            "mAP50-95": 0.8116
+          },
+          "conductor_scratch": {
+            "mAP50": 0.7311,
+            "mAP50-95": 0.4481
+          },
+          "conductor_foreign_object": {
+            "mAP50": 0.7006,
+            "mAP50-95": 0.4096
+          },
+          "base_material_foreign_object": {
+            "mAP50": 0.8707,
+            "mAP50-95": 0.4652
+          }
+        }
+      },
+      "status": "success",
+      "error": null
+    }
+  }
+}

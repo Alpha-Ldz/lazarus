@@ -1,7 +1,8 @@
 # Data and ML artifacts
 ml/data/
 ml/datasets/
-ml/runs/
+ml/runs/detect/
+ml/runs/train/
 apps/api/models/*.pt
 
 # Node
