@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-import numpy as np
 import pytest
 
-from apps.api.detectors.anomaly_bbox import anomaly_map_to_detections
+np = pytest.importorskip("numpy", reason="numpy not installed (ML extras required)")
+
+from apps.api.detectors.anomaly_bbox import anomaly_map_to_detections  # noqa: E402
 
 
 def _blank_map(h: int, w: int) -> np.ndarray:
